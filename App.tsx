@@ -1,19 +1,17 @@
 import { StatusBar } from "expo-status-bar";
 import React, { useRef, useState } from "react";
 import {
-  Alert,
-  Button,
-  Platform,
   SafeAreaView,
   StyleSheet,
   Text,
   TextStyle,
-  TouchableOpacity,
   Image,
   View,
   ScrollView,
-  TouchableNativeFeedback,
   Animated,
+  Pressable,
+  PressableProps,
+  Platform,
 } from "react-native";
 import { allWords } from "./src/allwords";
 import { words } from "./src/words";
@@ -31,6 +29,22 @@ const colors = {
 };
 
 const borderRadius = 8;
+
+const CrossPlatformPressable: React.FC<PressableProps> = (props) => {
+  const [isDepressed, setIsDepressed] = useState(false);
+  return (
+    <Pressable
+      {...props}
+      onPressIn={() => {
+        setIsDepressed(true);
+      }}
+      onPressOut={() => setTimeout(() => setIsDepressed(false), 100)}
+      style={{
+        opacity: isDepressed && Platform.OS === "web" ? 0.5 : 1,
+      }}
+    />
+  );
+};
 
 const T: React.FC<{ style?: TextStyle }> = ({ style, children }) => {
   return (
@@ -98,9 +112,6 @@ const Line: React.FC<{ word: string; answer?: string; letterHints?: string }> =
     );
   };
 
-const Touchable =
-  Platform.OS === "ios" ? TouchableOpacity : TouchableNativeFeedback;
-
 const Keyboard: React.FC<{
   colorings: Colorings;
   onKeyPress: (letter: string) => void;
@@ -118,7 +129,7 @@ const Keyboard: React.FC<{
           }}
         >
           {[...row].map((letter, i) => (
-            <Touchable
+            <CrossPlatformPressable
               key={letter}
               onPress={() => {
                 if (colorings[letter] === "wrong") {
@@ -165,7 +176,7 @@ const Keyboard: React.FC<{
                   </Text>
                 )}
               </View>
-            </Touchable>
+            </CrossPlatformPressable>
           ))}
         </View>
       ))}
@@ -256,7 +267,7 @@ export default function App() {
   };
 
   const playAgainButton = (
-    <Touchable
+    <CrossPlatformPressable
       onPress={() => {
         setGameState("play");
         setAttempts([]);
@@ -279,7 +290,7 @@ export default function App() {
       >
         <T>Play again</T>
       </View>
-    </Touchable>
+    </CrossPlatformPressable>
   );
 
   return (
@@ -406,5 +417,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    maxWidth: 560,
+    alignSelf: "center",
   },
 });
