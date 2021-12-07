@@ -34,6 +34,7 @@ const CrossPlatformPressable: React.FC<PressableProps> = (props) => {
   const [isDepressed, setIsDepressed] = useState(false);
   return (
     <Pressable
+      hitSlop={0}
       {...props}
       onPressIn={() => {
         setIsDepressed(true);
