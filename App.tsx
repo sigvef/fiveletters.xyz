@@ -12,6 +12,7 @@ import {
   Pressable,
   PressableProps,
   Platform,
+  Modal,
 } from "react-native";
 import { allWords } from "./src/allwords";
 import { words } from "./src/words";
@@ -34,7 +35,6 @@ const CrossPlatformPressable: React.FC<PressableProps> = (props) => {
   const [isDepressed, setIsDepressed] = useState(false);
   return (
     <Pressable
-      hitSlop={0}
       {...props}
       onPressIn={() => {
         setIsDepressed(true);
@@ -57,6 +57,37 @@ const T: React.FC<{ style?: TextStyle }> = ({ style, children }) => {
 
 const Line: React.FC<{ word: string; answer?: string; letterHints?: string }> =
   ({ word, answer, letterHints }) => {
+    const coloring: Coloring[] = [
+      "unknown",
+      "unknown",
+      "unknown",
+      "unknown",
+      "unknown",
+    ];
+    const usedWordLetters = [...Array(5)].map(() => false);
+    const usedAnswerLetters = [...Array(5)].map(() => false);
+    for (let i = 0; i < word.length; i++) {
+      if (word[i] === answer?.[i]) {
+        coloring[i] = "correct";
+        usedWordLetters[i] = true;
+        usedAnswerLetters[i] = true;
+      }
+    }
+    for (let i = 0; i < word.length; i++) {
+      const answerIndex = [...(answer || "")]
+        .filter((_, i) => !usedAnswerLetters[i])
+        .indexOf(word[i]);
+      if (!usedWordLetters[i] && answerIndex !== -1) {
+        coloring[i] = "semi-correct";
+        usedWordLetters[i] = true;
+        usedAnswerLetters[answerIndex] = true;
+      }
+
+      if (answer && coloring[i] === "unknown") {
+        coloring[i] = "wrong";
+      }
+    }
+
     return (
       <View
         style={{
@@ -76,17 +107,7 @@ const Line: React.FC<{ word: string; answer?: string; letterHints?: string }> =
                 marginHorizontal: 4,
                 justifyContent: "center",
                 alignItems: "center",
-                backgroundColor:
-                  backgroundColors[
-                    answer
-                      ? letter.toUpperCase() === answer[i].toUpperCase()
-                        ? "correct"
-                        : answer.toUpperCase().indexOf(letter.toUpperCase()) !==
-                          -1
-                        ? "semi-correct"
-                        : "wrong"
-                      : "unknown"
-                  ],
+                backgroundColor: backgroundColors[coloring[i]],
               }}
             >
               <Text
@@ -97,23 +118,12 @@ const Line: React.FC<{ word: string; answer?: string; letterHints?: string }> =
                   fontSize: 14,
                 }}
               >
-                {letterHints?.[i].toUpperCase()}
+                {letterHints?.[i]?.toUpperCase()}
               </Text>
               <Text
                 style={{
                   fontSize: 32,
-                  color:
-                    foregroundColors[
-                      answer
-                        ? letter.toUpperCase() === answer[i].toUpperCase()
-                          ? "correct"
-                          : answer
-                              .toUpperCase()
-                              .indexOf(letter.toUpperCase()) !== -1
-                          ? "semi-correct"
-                          : "wrong"
-                        : "unknown"
-                    ],
+                  color: foregroundColors[coloring[i]],
                 }}
               >
                 {letter.toUpperCase()}
@@ -235,6 +245,8 @@ const springAnimation = (() => {
   return { inputRange, outputRange };
 })();
 
+type HelperState = "not-shown-yet" | "show-now" | "never-show-again";
+
 export default function App() {
   const [gameState, setGameState] = useState<"play" | "win" | "lose">("play");
   const [answer, setAnswer] = useState(() => {
@@ -243,6 +255,12 @@ export default function App() {
   const [shakeValue] = useState(() => new Animated.Value(0));
 
   const [colorings, setColorings] = useState<Colorings>({});
+
+  const [deducedSlots, setDeducedSlots] = useState([" ", " ", " ", " ", " "]);
+  const [showOrangeHelper, setShowOrangeHelper] =
+    useState<HelperState>("not-shown-yet");
+  const [showGreenHelper, setShowGreenHelper] =
+    useState<HelperState>("not-shown-yet");
 
   const [attempts, setAttempts] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -253,21 +271,47 @@ export default function App() {
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 50);
+
+      setShowGreenHelper((old) =>
+        old === "show-now" ? "never-show-again" : old
+      );
+      setShowOrangeHelper((old) =>
+        old === "show-now" ? "never-show-again" : old
+      );
       setAttempts((old) => [...old, attempt]);
       setInputValue("");
+      setDeducedSlots((old) => {
+        const newValue = old.slice();
+        for (let i = 0; i < attempt.length; i++) {
+          if (answer[i] === attempt[i]) {
+            newValue[i] = answer[i];
+          }
+        }
+        return newValue;
+      });
       setColorings((old) => {
         const result = { ...old };
+        let didSeeOrange = false;
+        let didSeeGreen = false;
         for (let i = 0; i < attempt.length; i++) {
           if (answer[i] === attempt[i]) {
             result[answer[i]] = "correct";
+            didSeeGreen = true;
           } else if (
             answer.indexOf(attempt[i]) !== -1 &&
             result[attempt[i]] !== "correct"
           ) {
             result[attempt[i]] = "semi-correct";
+            didSeeOrange = true;
           } else if (!result[attempt[i]]) {
             result[attempt[i]] = "wrong";
           }
+        }
+        if (didSeeOrange && showOrangeHelper === "not-shown-yet") {
+          setShowOrangeHelper("show-now");
+        }
+        if (didSeeGreen && showGreenHelper === "not-shown-yet") {
+          setShowGreenHelper("show-now");
         }
         return result;
       });
@@ -292,6 +336,7 @@ export default function App() {
         setGameState("play");
         setAttempts([]);
         setColorings({});
+        setDeducedSlots([" ", " ", " ", " ", " "]);
         setAnswer(words[(Math.random() * words.length) | 0]);
       }}
       style={{
@@ -361,21 +406,38 @@ export default function App() {
               >
                 <Line
                   word={inputValue.padEnd(5, " ")}
-                  letterHints={[...answer]
-                    .map((letter) =>
-                      colorings[letter] === "correct" ? letter : " "
-                    )
-                    .join("")}
+                  letterHints={deducedSlots.join("")}
                 />
               </Animated.View>
+            )}
+
+            {(showGreenHelper === "show-now" ||
+              showOrangeHelper === "show-now") && (
+              <View style={{ padding: 16 }}>
+                {showOrangeHelper === "show-now" && (
+                  <T style={{ marginBottom: 16 }}>
+                    <T style={{ color: colors.yellow }}>ORANGE</T> is a correct
+                    letter, but in the wrong place.
+                  </T>
+                )}
+                {showGreenHelper === "show-now" && (
+                  <T style={{ marginBottom: 16 }}>
+                    <T style={{ color: colors.green }}>GREEN</T> is a correct
+                    letter in the correct place.
+                  </T>
+                )}
+              </View>
             )}
 
             <View style={{ flex: 1 }} />
           </ScrollView>
           {gameState === "play" && (
             <T style={{ marginBottom: 16 }}>
-              Guess the word! {remainingAttempts} attempt
-              {remainingAttempts === 1 ? "" : "s"} remaining.
+              {remainingAttempts === maxAttempts
+                ? "Guess the word!"
+                : `${remainingAttempts} attempt${
+                    remainingAttempts === 1 ? "" : "s"
+                  } remaining.`}
             </T>
           )}
           {gameState === "lose" && (
@@ -439,7 +501,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    maxWidth: 560,
+    maxWidth: 64 * 5 + 8 * 4 + 16 * 2,
     alignSelf: "center",
   },
 });
