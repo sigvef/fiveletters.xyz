@@ -19,9 +19,9 @@ import { words } from "./src/words";
 const allWordsSet = new Set(allWords);
 
 const colors = {
-  extraBlack: "#010f14",
-  black: "#041e29",
-  dark: "#264653",
+  extraBlack: "#031514",
+  black: "#0c2629",
+  dark: "#265353",
   green: "#2a9d8f",
   yellow: "#e9c46a",
   white: "white",
@@ -101,6 +101,18 @@ const Line: React.FC<{ word: string; answer?: string; letterHints?: string }> =
               <Text
                 style={{
                   fontSize: 32,
+                  color:
+                    foregroundColors[
+                      answer
+                        ? letter.toUpperCase() === answer[i].toUpperCase()
+                          ? "correct"
+                          : answer
+                              .toUpperCase()
+                              .indexOf(letter.toUpperCase()) !== -1
+                          ? "semi-correct"
+                          : "wrong"
+                        : "unknown"
+                    ],
                 }}
               >
                 {letter.toUpperCase()}
@@ -194,6 +206,13 @@ const backgroundColors = {
   "semi-correct": colors.yellow,
   correct: colors.green,
   wrong: colors.black,
+};
+
+const foregroundColors = {
+  unknown: colors.extraBlack,
+  "semi-correct": colors.extraBlack,
+  correct: colors.extraBlack,
+  wrong: colors.dark,
 };
 
 const springAnimation = (() => {
