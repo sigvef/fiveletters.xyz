@@ -312,6 +312,8 @@ export default function App() {
     </CrossPlatformPressable>
   );
 
+  const remainingAttempts = maxAttempts - attempts.length;
+
   return (
     <View style={{ backgroundColor: colors.dark, flex: 1 }}>
       <SafeAreaView style={{ flex: 1 }}>
@@ -371,8 +373,8 @@ export default function App() {
           </ScrollView>
           {gameState === "play" && (
             <T style={{ marginBottom: 16 }}>
-              Guess the word! {maxAttempts - attempts.length} attempts
-              remaining.
+              Guess the word! {remainingAttempts} attempt
+              {remainingAttempts === 1 ? "" : "s"} remaining.
             </T>
           )}
           {gameState === "lose" && (
