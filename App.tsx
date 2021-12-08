@@ -26,6 +26,8 @@ const colors = {
   dark: "#265353",
   green: "#2a9d8f",
   yellow: "#e9c46a",
+  lightYellow: "#b5ac97",
+  light: "#6ea7a5",
   white: "white",
   red: "#e76f51",
 };
@@ -50,7 +52,14 @@ const CrossPlatformPressable: React.FC<PressableProps> = (props) => {
 
 const T: React.FC<{ style?: TextStyle }> = ({ style, children }) => {
   return (
-    <Text style={{ fontSize: 22, color: colors.extraBlack, ...style }}>
+    <Text
+      style={{
+        fontSize: 22,
+        lineHeight: "1.25",
+        color: colors.extraBlack,
+        ...style,
+      }}
+    >
       {children}
     </Text>
   );
@@ -356,6 +365,7 @@ export default function App() {
             {gameState === "play" && (
               <Animated.View
                 style={{
+                  marginBottom: 16,
                   transform: [
                     {
                       translateX: Animated.multiply(
@@ -380,16 +390,34 @@ export default function App() {
             {(showGreenHelper === "show-now" ||
               showOrangeHelper === "show-now") && (
               <View style={{ padding: 16 }}>
-                {showOrangeHelper === "show-now" && (
-                  <T style={{ marginBottom: 16 }}>
-                    <T style={{ color: colors.yellow }}>ORANGE</T> is a correct
-                    letter, but in the wrong place.
+                {showGreenHelper === "show-now" && (
+                  <T style={{ marginBottom: 16, color: colors.light }}>
+                    <View
+                      style={{
+                        width: 24,
+                        height: 24,
+                        marginRight: 6,
+                        marginBottom: -6,
+                        borderRadius: 4,
+                        backgroundColor: colors.green,
+                      }}
+                    />{" "}
+                    correct letter, right place
                   </T>
                 )}
-                {showGreenHelper === "show-now" && (
-                  <T style={{ marginBottom: 16 }}>
-                    <T style={{ color: colors.green }}>GREEN</T> is a correct
-                    letter in the correct place.
+                {showOrangeHelper === "show-now" && (
+                  <T style={{ marginBottom: 16, color: colors.lightYellow }}>
+                    <View
+                      style={{
+                        width: 24,
+                        height: 24,
+                        marginRight: 6,
+                        marginBottom: -6,
+                        borderRadius: 4,
+                        backgroundColor: colors.yellow,
+                      }}
+                    />{" "}
+                    correct letter, wrong place
                   </T>
                 )}
               </View>
