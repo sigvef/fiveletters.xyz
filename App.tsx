@@ -361,7 +361,14 @@ export default function App() {
   const remainingAttempts = maxAttempts - attempts.length;
 
   return (
-    <View style={{ backgroundColor: colors.dark, flex: 1, height: "100vh" }}>
+    <View
+      style={{
+        backgroundColor: colors.dark,
+        flex: 1,
+        height: "100vh",
+        maxHeight: "-webkit-fill-available",
+      }}
+    >
       <SafeAreaView style={{ flex: 1 }}>
         <View style={styles.container}>
           <StatusBar style="auto" />
