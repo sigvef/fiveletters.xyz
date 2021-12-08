@@ -15,6 +15,7 @@ import {
   Modal,
 } from "react-native";
 import { allWords } from "./src/allwords";
+import { Coloring, Colorings, getAllColorings } from "./src/game";
 import { words } from "./src/words";
 
 const allWordsSet = new Set(allWords);
@@ -55,85 +56,57 @@ const T: React.FC<{ style?: TextStyle }> = ({ style, children }) => {
   );
 };
 
-const Line: React.FC<{ word: string; answer?: string; letterHints?: string }> =
-  ({ word, answer, letterHints }) => {
-    const coloring: Coloring[] = [
-      "unknown",
-      "unknown",
-      "unknown",
-      "unknown",
-      "unknown",
-    ];
-    const usedWordLetters = [...Array(5)].map(() => false);
-    const usedAnswerLetters = [...Array(5)].map(() => false);
-    for (let i = 0; i < word.length; i++) {
-      if (word[i] === answer?.[i]) {
-        coloring[i] = "correct";
-        usedWordLetters[i] = true;
-        usedAnswerLetters[i] = true;
-      }
-    }
-    for (let i = 0; i < word.length; i++) {
-      const answerIndex = [...(answer || "")]
-        .filter((_, i) => !usedAnswerLetters[i])
-        .indexOf(word[i]);
-      if (!usedWordLetters[i] && answerIndex !== -1) {
-        coloring[i] = "semi-correct";
-        usedWordLetters[i] = true;
-        usedAnswerLetters[answerIndex] = true;
-      }
-
-      if (answer && coloring[i] === "unknown") {
-        coloring[i] = "wrong";
-      }
-    }
-
-    return (
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        {[...word].map((letter, i) => {
-          return (
-            <View
-              key={i}
+const Line: React.FC<{
+  word: string;
+  coloring: Coloring[];
+  letterHints?: string[];
+}> = ({ word, coloring, letterHints }) => {
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      {[...word].map((letter, i) => {
+        return (
+          <View
+            key={i}
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius,
+              marginHorizontal: 4,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: backgroundColors[coloring[i]],
+            }}
+          >
+            <Text
               style={{
-                width: 64,
-                height: 64,
-                borderRadius,
-                marginHorizontal: 4,
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: backgroundColors[coloring[i]],
+                position: "absolute",
+                left: 6,
+                top: 4,
+                fontSize: 14,
               }}
             >
-              <Text
-                style={{
-                  position: "absolute",
-                  left: 6,
-                  top: 4,
-                  fontSize: 14,
-                }}
-              >
-                {letterHints?.[i]?.toUpperCase()}
-              </Text>
-              <Text
-                style={{
-                  fontSize: 32,
-                  color: foregroundColors[coloring[i]],
-                }}
-              >
-                {letter.toUpperCase()}
-              </Text>
-            </View>
-          );
-        })}
-      </View>
-    );
-  };
+              {letterHints?.[i]?.toUpperCase()}
+            </Text>
+            <Text
+              style={{
+                fontSize: 32,
+                color: foregroundColors[coloring[i]],
+              }}
+            >
+              {letter.toUpperCase()}
+            </Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+};
 
 const Keyboard: React.FC<{
   colorings: Colorings;
@@ -209,9 +182,6 @@ const Keyboard: React.FC<{
 
 const maxAttempts = 5;
 
-type Coloring = "unknown" | "wrong" | "semi-correct" | "correct";
-type Colorings = { [key: string]: Coloring };
-
 const backgroundColors = {
   unknown: "#f5f5f522",
   "semi-correct": colors.yellow,
@@ -254,9 +224,6 @@ export default function App() {
   });
   const [shakeValue] = useState(() => new Animated.Value(0));
 
-  const [colorings, setColorings] = useState<Colorings>({});
-
-  const [deducedSlots, setDeducedSlots] = useState([" ", " ", " ", " ", " "]);
   const [showOrangeHelper, setShowOrangeHelper] =
     useState<HelperState>("not-shown-yet");
   const [showGreenHelper, setShowGreenHelper] =
@@ -272,49 +239,36 @@ export default function App() {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 50);
 
-      setShowGreenHelper((old) =>
-        old === "show-now" ? "never-show-again" : old
-      );
-      setShowOrangeHelper((old) =>
-        old === "show-now" ? "never-show-again" : old
-      );
+      const colorings = getAllColorings(answer, [...attempts, attempt]);
+      const latest =
+        colorings.attemptColorings[colorings.attemptColorings.length - 1];
+
+      setShowGreenHelper((old) => {
+        if (old === "never-show-again") {
+          return old;
+        }
+        if (old === "show-now") {
+          return "never-show-again";
+        }
+        if (latest.indexOf("correct") !== -1) {
+          return "show-now";
+        }
+        return old;
+      });
+      setShowOrangeHelper((old) => {
+        if (old === "never-show-again") {
+          return old;
+        }
+        if (old === "show-now") {
+          return "never-show-again";
+        }
+        if (latest.indexOf("semi-correct") !== -1) {
+          return "show-now";
+        }
+        return old;
+      });
       setAttempts((old) => [...old, attempt]);
       setInputValue("");
-      setDeducedSlots((old) => {
-        const newValue = old.slice();
-        for (let i = 0; i < attempt.length; i++) {
-          if (answer[i] === attempt[i]) {
-            newValue[i] = answer[i];
-          }
-        }
-        return newValue;
-      });
-      setColorings((old) => {
-        const result = { ...old };
-        let didSeeOrange = false;
-        let didSeeGreen = false;
-        for (let i = 0; i < attempt.length; i++) {
-          if (answer[i] === attempt[i]) {
-            result[answer[i]] = "correct";
-            didSeeGreen = true;
-          } else if (
-            answer.indexOf(attempt[i]) !== -1 &&
-            result[attempt[i]] !== "correct"
-          ) {
-            result[attempt[i]] = "semi-correct";
-            didSeeOrange = true;
-          } else if (!result[attempt[i]]) {
-            result[attempt[i]] = "wrong";
-          }
-        }
-        if (didSeeOrange && showOrangeHelper === "not-shown-yet") {
-          setShowOrangeHelper("show-now");
-        }
-        if (didSeeGreen && showGreenHelper === "not-shown-yet") {
-          setShowGreenHelper("show-now");
-        }
-        return result;
-      });
       if (attempt === answer) {
         setGameState("win");
       } else if (attempts.length + 1 === maxAttempts) {
@@ -335,8 +289,6 @@ export default function App() {
       onPress={() => {
         setGameState("play");
         setAttempts([]);
-        setColorings({});
-        setDeducedSlots([" ", " ", " ", " ", " "]);
         setAnswer(words[(Math.random() * words.length) | 0]);
       }}
       style={{
@@ -359,6 +311,8 @@ export default function App() {
   );
 
   const remainingAttempts = maxAttempts - attempts.length;
+
+  const colorings = getAllColorings(answer, attempts);
 
   return (
     <View
@@ -395,7 +349,7 @@ export default function App() {
           >
             {attempts.map((attempt, i) => (
               <View key={i} style={{ marginBottom: 8 }}>
-                <Line word={attempt} answer={answer} />
+                <Line word={attempt} coloring={colorings.attemptColorings[i]} />
               </View>
             ))}
 
@@ -417,7 +371,8 @@ export default function App() {
               >
                 <Line
                   word={inputValue.padEnd(5, " ")}
-                  letterHints={deducedSlots.join("")}
+                  coloring={[...new Array(answer.length)].map(() => "unknown")}
+                  letterHints={colorings.deduced}
                 />
               </Animated.View>
             )}
@@ -486,7 +441,7 @@ export default function App() {
           {gameState === "play" && (
             <View style={{ marginHorizontal: -16 }}>
               <Keyboard
-                colorings={colorings}
+                colorings={colorings.keyboardColorings}
                 onKeyPress={(letter) => {
                   if (letter === "<") {
                     setInputValue((old) => old.slice(0, -1));
