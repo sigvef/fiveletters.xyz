@@ -361,7 +361,7 @@ export default function App() {
   const remainingAttempts = maxAttempts - attempts.length;
 
   return (
-    <View style={{ backgroundColor: colors.dark, flex: 1 }}>
+    <View style={{ backgroundColor: colors.dark, flex: 1, height: "100vh" }}>
       <SafeAreaView style={{ flex: 1 }}>
         <View style={styles.container}>
           <StatusBar style="auto" />
@@ -380,7 +380,11 @@ export default function App() {
 
           <ScrollView
             ref={scrollViewRef}
-            style={{ flex: 1, marginHorizontal: -16, marginBottom: 16 }}
+            style={{
+              flex: 1,
+              marginHorizontal: -16,
+              marginBottom: 16,
+            }}
           >
             {attempts.map((attempt, i) => (
               <View key={i} style={{ marginBottom: 8 }}>
