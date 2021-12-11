@@ -468,6 +468,11 @@ export default function App() {
         setAttempts([]);
         setAnswer(words[(Math.random() * words.length) | 0]);
         setIsFirstPlaythrough(false);
+        for (let i = 0; i < answer.length; i++) {
+          setTimeout(() => {
+            setAttempts([answer.slice(0, i + 1).padEnd(5, " ")]);
+          }, 100 + i * 50);
+        }
       }}
       style={{
         borderRadius: 999,
