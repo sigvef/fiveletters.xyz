@@ -3,6 +3,7 @@ import { allWords } from "./allwords";
 import { Coloring, Colorings, getAllColorings } from "./game";
 import { words } from "./words";
 import backspaceImage from "./assets/backspace.png";
+import { CheckCircleFillIcon, RocketIcon, XIcon } from "@primer/octicons-react";
 
 const containerMaxWidth = 560;
 
@@ -100,7 +101,11 @@ const startAnimation = (key: string, animation: Animation) => {
   requestAnimationFrame(animationLoop);
 };
 
-const T: React.FC<{ style?: any }> = ({ style, children }) => {
+const T: React.FC<{ style?: any; className?: string }> = ({
+  style,
+  children,
+  className,
+}) => {
   return (
     <div
       style={{
@@ -112,16 +117,12 @@ const T: React.FC<{ style?: any }> = ({ style, children }) => {
         color: colors.extraBlack,
         ...style,
       }}
+      className={className}
     >
       {children}
     </div>
   );
 };
-
-interface ContainerSize {
-  width: number;
-  height: number;
-}
 
 const Line: React.FC<{
   word: string;
@@ -157,6 +158,10 @@ const Line: React.FC<{
               alignItems: "center",
               backgroundColor: backgroundColors[coloring[i]],
               position: "relative",
+              border:
+                coloring[i] === "outline"
+                  ? "2px dotted " + backgroundColors.unknown
+                  : 0,
             }}
           >
             <span
@@ -367,6 +372,7 @@ const Keyboard: React.FC<{
 const maxAttempts = 5;
 
 const backgroundColors = {
+  outline: "transparent",
   unknown: "#f5f5f522",
   "semi-correct": colors.yellow,
   correct: colors.green,
@@ -374,6 +380,7 @@ const backgroundColors = {
 };
 
 const foregroundColors = {
+  outline: "transparent",
   unknown: colors.extraBlack,
   "semi-correct": colors.extraBlack,
   correct: colors.extraBlack,
@@ -402,6 +409,8 @@ const springAnimation = (() => {
 type HelperState = "not-shown-yet" | "show-now" | "never-show-again";
 
 export default function App() {
+  const [isPremium, setIsPremium] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [containerSize, setContainerSize] = useState({
     width: Math.min(containerMaxWidth, window.innerWidth),
     height: window.innerHeight,
@@ -436,15 +445,16 @@ export default function App() {
   const [hasNotMadeAnyAttemptYet, setHasNotMadeAnyAttemptYet] = useState(true);
 
   const [attempts, setAttempts] = useState<string[]>([]);
+  const [hints, setHints] = useState<number[]>([]);
   const [inputValue, setInputValue] = useState("");
 
-  const makeAttempt = (attempt: string, answer: string) => {
+  const makeAttempt = (attempt: string, answer: string, attempts: string[]) => {
     if (allWordsSet.has(attempt.toUpperCase())) {
       if (attempts.length === 2) {
         setHasNotMadeAnyAttemptYet(false);
       }
 
-      const colorings = getAllColorings(answer, [...attempts, attempt]);
+      const colorings = getAllColorings(answer, [...attempts, attempt], hints);
       const latest =
         colorings.attemptColorings[colorings.attemptColorings.length - 1];
 
@@ -500,6 +510,7 @@ export default function App() {
       onClick={() => {
         setGameState("play");
         setAttempts([]);
+        setHints([]);
         const newAnswer = words[(Math.random() * words.length) | 0];
         setAnswer(newAnswer);
         setIsFirstPlaythrough(false);
@@ -509,8 +520,7 @@ export default function App() {
           }, 300 + i * 75);
         }
         setTimeout(() => {
-          console.log("making attempt for", answer);
-          makeAttempt(answer, newAnswer);
+          makeAttempt(answer, newAnswer, []);
         }, 300 + answer.length * 75);
       }}
       style={{
@@ -541,7 +551,7 @@ export default function App() {
 
   const remainingAttempts = maxAttempts - attempts.length;
 
-  const colorings = getAllColorings(answer, attempts);
+  const colorings = getAllColorings(answer, attempts, hints);
 
   return (
     <div
@@ -552,24 +562,36 @@ export default function App() {
         maxHeight: "-webkit-fill-available",
         display: "flex",
         flexDirection: "column",
+        overflow: "hidden",
       }}
     >
-      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
         <div style={styles.container}>
           <div
             className="animate-all"
             style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
               textAlign: "center",
               opacity: hasNotMadeAnyAttemptYet ? 1 : 1,
               height: 32,
               marginTop: hasNotMadeAnyAttemptYet ? 32 : -64,
-              marginBottom: hasNotMadeAnyAttemptYet ? 32 : 32 + 16,
+              marginBottom: hasNotMadeAnyAttemptYet ? 64 : 32 + 16,
               fontSize: 32,
               fontWeight: "bold",
               color: colors.extraBlack,
             }}
           >
-            Five Letters
+            <div>Five Letters</div>
           </div>
 
           <div
@@ -617,6 +639,24 @@ export default function App() {
                   letterHints={colorings.deduced}
                   letterBoxSize={letterBoxSize}
                 />
+              </div>
+            )}
+
+            {gameState === "play" && !hasNotMadeAnyAttemptYet && (
+              <div style={{ marginTop: -8, marginBottom: 8 }}>
+                {[
+                  ...new Array(Math.max(maxAttempts - attempts.length - 1, 0)),
+                ].map((_, i) => (
+                  <div key={i} style={{ marginBottom: 8 }}>
+                    <Line
+                      word={"     "}
+                      coloring={[...new Array(answer.length)].map(
+                        () => "outline"
+                      )}
+                      letterBoxSize={letterBoxSize}
+                    />
+                  </div>
+                ))}
               </div>
             )}
 
@@ -733,8 +773,96 @@ export default function App() {
               style={{
                 marginLeft: -16,
                 marginRight: -16,
+                display: "flex",
+                flexDirection: "column",
               }}
             >
+              <div style={{ display: "flex", alignItems: "flex-end" }}>
+                <T
+                  className="animate-all-fast"
+                  style={{
+                    marginBottom: 16,
+                    marginLeft: 16,
+                    color: colors.black,
+                    alignSelf: "flex-end",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    opacity: attempts.length > 0 ? 1 : 0,
+                    transform:
+                      attempts.length > 0
+                        ? "translateY(0px)"
+                        : "translateY(8px)",
+                    pointerEvents: attempts.length > 0 ? "all" : "none",
+                  }}
+                >
+                  <a
+                    href="#"
+                    style={{ color: colors.black }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (!isPremium) {
+                        setShowPremiumModal(true);
+                        return;
+                      }
+                      const hintableIndexes = colorings.deduced
+                        .map((x, i) => (x ? -1 : i))
+                        .filter((x) => x > -1);
+                      const hintIndex =
+                        hintableIndexes[
+                          (Math.random() * hintableIndexes.length) | 0
+                        ];
+                      setHints((old) => [...old, hintIndex]);
+                    }}
+                  >
+                    Hint
+                  </a>
+                </T>
+                <div style={{ flex: 1 }} />
+                {isPremium && (
+                  <T
+                    style={{
+                      marginBottom: 16,
+                      marginRight: 16,
+                      color: colors.light,
+                      opacity: 0.5,
+                      alignSelf: "flex-end",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    Premium
+                    <div style={{ marginLeft: 8 }}>
+                      <RocketIcon size={24} />
+                    </div>
+                  </T>
+                )}
+                {!isPremium && (
+                  <T
+                    style={{
+                      marginBottom: 16,
+                      marginRight: 16,
+                      color: colors.black,
+                      alignSelf: "flex-end",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <a
+                      href="#"
+                      style={{ color: colors.black }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setShowPremiumModal(true);
+                      }}
+                    >
+                      Get premium
+                    </a>
+                  </T>
+                )}
+              </div>
               <Keyboard
                 colorings={colorings.keyboardColorings}
                 onKeyPress={(letter) => {
@@ -745,16 +873,203 @@ export default function App() {
                       return old.length < 5 ? old + letter : old;
                     });
                     if (inputValue.length === 4) {
-                      makeAttempt(inputValue + letter, answer);
+                      makeAttempt(inputValue + letter, answer, attempts);
                     }
                     if (inputValue.length === 5) {
-                      makeAttempt(inputValue, answer);
+                      makeAttempt(inputValue, answer, attempts);
                     }
                   }
                 }}
               />
             </div>
           )}
+        </div>
+      </div>
+
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          pointerEvents: showPremiumModal ? "all" : "none",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          data-backdrop="true"
+          onClick={(e) => {
+            //@ts-expect-error
+            if (e.target?.dataset?.backdrop) {
+              setShowPremiumModal(false);
+            }
+          }}
+          className="animate-all-fast blur-bg"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            opacity: showPremiumModal ? 1 : 0,
+            transform: `translate3D(0, ${showPremiumModal ? 0 : "32px"}, 0)`,
+          }}
+        >
+          <div
+            style={{
+              maxWidth: containerMaxWidth,
+              margin: "0 auto",
+              padding: 16,
+            }}
+          >
+            <div
+              style={{
+                background: colors.light,
+                borderRadius,
+                padding: 32,
+                display: "flex",
+                flexDirection: "column",
+                position: "relative",
+                boxShadow: "0px 8px 16px " + colors.black + "88",
+                maxWidth: 256 + 128 + 32,
+                margin: "0 auto",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <T
+                  style={{
+                    fontWeight: "bold",
+                    marginBottom: 16,
+                    marginLeft: 38,
+                    paddingRight: 32,
+                  }}
+                >
+                  Five Letters Premium
+                </T>
+                <button
+                  onClick={() => {
+                    setShowPremiumModal(false);
+                  }}
+                  style={{
+                    background: "transparent",
+                    border: 0,
+                    position: "absolute",
+                    top: -8,
+                    right: -8,
+                    color: colors.dark,
+                    padding: 16,
+                    borderRadius: 9999,
+                  }}
+                >
+                  <XIcon size={24} />
+                </button>
+                <T
+                  style={{
+                    marginLeft: 20,
+                    marginBottom: 16,
+                    alignItems: "flex-end",
+                  }}
+                >
+                  <span
+                    style={{
+                      color: colors.dark,
+                      marginBottom: 16,
+                      marginRight: 4,
+                    }}
+                  >
+                    $
+                  </span>
+                  <span style={{ fontSize: 40, fontWeight: "bold" }}>3</span>
+                  <span style={{ color: colors.dark, marginBottom: 6 }}>
+                    /mo
+                  </span>
+                </T>
+                {[
+                  {
+                    text: "Hints & solutions",
+                    sub: "Get extra hints or see the solution if you get stuck.",
+                  },
+                  {
+                    text: "Statistics & breakdowns",
+                    sub: "Detailed analysis of your own games.",
+                  },
+                  { text: "No ads", sub: "Just like the free version!" },
+                  {
+                    text: "Cancel any time",
+                    sub: "I will even refund your current month.",
+                  },
+                ].map((item) => (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      marginBottom: 16,
+                    }}
+                  >
+                    <div style={{ marginTop: 2, color: colors.dark }}>
+                      <CheckCircleFillIcon size={24} />
+                    </div>
+                    <T
+                      style={{
+                        marginLeft: 16,
+                        flexDirection: "column",
+                        alignItems: "flex-start",
+                      }}
+                    >
+                      {item.text}
+                      <span style={{ color: colors.dark, fontSize: 16 }}>
+                        {item.sub}
+                      </span>
+                    </T>
+                  </div>
+                ))}
+
+                {/*href="https://fiveletters.gumroad.com/l/yjxbev?wanted=true"*/}
+                {/*data-gumroad-single-product="true"*/}
+                <a
+                  style={{
+                    marginTop: 16,
+                    borderRadius: 999,
+                    alignSelf: "center",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    display: "flex",
+                    cursor: "pointer",
+                    color: colors.light,
+                    textDecoration: "none",
+                    boxShadow: "0px 2px 4px " + colors.dark + "88",
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    alert("You have unlocked a free trial!");
+                    setIsPremium(true);
+                    setShowPremiumModal(false);
+                  }}
+                >
+                  <div
+                    style={{
+                      paddingLeft: 32,
+                      paddingRight: 32,
+                      paddingTop: 16,
+                      paddingBottom: 16,
+                      borderRadius: 999,
+                      backgroundColor: colors.extraBlack,
+                      alignSelf: "center",
+                      display: "flex",
+                    }}
+                  >
+                    <T style={{ color: colors.light }}>Get Premium</T>
+                  </div>
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

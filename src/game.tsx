@@ -1,7 +1,16 @@
-export type Coloring = "unknown" | "wrong" | "semi-correct" | "correct";
+export type Coloring =
+  | "unknown"
+  | "wrong"
+  | "semi-correct"
+  | "correct"
+  | "outline";
 export type Colorings = { [key: string]: Coloring };
 
-export function getAllColorings(answer: string, attempts: string[]) {
+export function getAllColorings(
+  answer: string,
+  attempts: string[],
+  hints: number[]
+) {
   const attemptColorings: Coloring[][] = [];
   const keyboardColorings: { [key: string]: Coloring } = {};
   const deduced: string[] = [...new Array(answer.length)].map(() => "");
@@ -41,6 +50,11 @@ export function getAllColorings(answer: string, attempts: string[]) {
           break;
         }
       }
+    }
+
+    /* Add hints to deduced */
+    for (const hint of hints) {
+      deduced[hint] = answer[hint];
     }
 
     /* Update keyboard colorings now that we have colored this attempt. */
