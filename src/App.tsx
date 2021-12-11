@@ -438,7 +438,7 @@ export default function App() {
   const [attempts, setAttempts] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState("");
 
-  const makeAttempt = (attempt: string) => {
+  const makeAttempt = (attempt: string, answer: string) => {
     if (allWordsSet.has(attempt.toUpperCase())) {
       if (attempts.length === 2) {
         setHasNotMadeAnyAttemptYet(false);
@@ -500,13 +500,18 @@ export default function App() {
       onClick={() => {
         setGameState("play");
         setAttempts([]);
-        setAnswer(words[(Math.random() * words.length) | 0]);
+        const newAnswer = words[(Math.random() * words.length) | 0];
+        setAnswer(newAnswer);
         setIsFirstPlaythrough(false);
         for (let i = 0; i < answer.length; i++) {
           setTimeout(() => {
-            setAttempts([answer.slice(0, i + 1).padEnd(5, " ")]);
-          }, 100 + i * 50);
+            setInputValue(answer.slice(0, i + 1));
+          }, 300 + i * 75);
         }
+        setTimeout(() => {
+          console.log("making attempt for", answer);
+          makeAttempt(answer, newAnswer);
+        }, 300 + answer.length * 75);
       }}
       style={{
         borderRadius: 999,
@@ -514,6 +519,7 @@ export default function App() {
         justifyContent: "center",
         alignItems: "center",
         display: "flex",
+        cursor: "pointer",
       }}
     >
       <div
@@ -554,10 +560,10 @@ export default function App() {
             className="animate-all"
             style={{
               textAlign: "center",
-              opacity: hasNotMadeAnyAttemptYet ? 1 : 0,
+              opacity: hasNotMadeAnyAttemptYet ? 1 : 1,
               height: 32,
               marginTop: hasNotMadeAnyAttemptYet ? 32 : -64,
-              marginBottom: hasNotMadeAnyAttemptYet ? 32 : 32,
+              marginBottom: hasNotMadeAnyAttemptYet ? 32 : 32 + 16,
               fontSize: 32,
               fontWeight: "bold",
               color: colors.extraBlack,
@@ -664,21 +670,11 @@ export default function App() {
                     justifyContent: "center",
                   }}
                 >
-                  Guess the word!
+                  Guess the word.
                 </T>
               )}
 
               <div style={{ flex: 1 }} />
-
-              {gameState === "play" && isFirstPlaythrough && (
-                <T style={{ marginBottom: 16 }}>
-                  {remainingAttempts === maxAttempts
-                    ? ""
-                    : `${remainingAttempts} attempt${
-                        remainingAttempts === 1 ? "" : "s"
-                      } remaining.`}
-                </T>
-              )}
 
               {gameState === "win" && (
                 <div
@@ -749,10 +745,10 @@ export default function App() {
                       return old.length < 5 ? old + letter : old;
                     });
                     if (inputValue.length === 4) {
-                      makeAttempt(inputValue + letter);
+                      makeAttempt(inputValue + letter, answer);
                     }
                     if (inputValue.length === 5) {
-                      makeAttempt(inputValue);
+                      makeAttempt(inputValue, answer);
                     }
                   }
                 }}
