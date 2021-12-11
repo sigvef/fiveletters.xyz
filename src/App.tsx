@@ -4,7 +4,7 @@ import { Coloring, Colorings, getAllColorings } from "./game";
 import { words } from "./words";
 import backspaceImage from "./assets/backspace.png";
 
-const containerMaxWidth = 450;
+const containerMaxWidth = 560;
 
 const allWordsSet = new Set(allWords);
 
@@ -127,13 +127,10 @@ const Line: React.FC<{
   word: string;
   coloring: Coloring[];
   letterHints?: string[];
-  containerSize: ContainerSize;
+  letterBoxSize: number;
 }> = React.forwardRef((props, ref) => {
-  const { word, coloring, letterHints, containerSize } = props;
-  const size = Math.min(
-    64,
-    (containerSize.width - 32 - (word.length - 1) * 8) / word.length
-  );
+  const { word, coloring, letterHints, letterBoxSize } = props;
+  const size = letterBoxSize;
   return (
     <div
       ref={ref}
@@ -262,6 +259,33 @@ const Keyboard: React.FC<{
         e.preventDefault();
         setActive(null);
       };
+      const keydown = (e: KeyboardEvent) => {
+        let letter = e.key.toUpperCase();
+        if (letter === "BACKSPACE") {
+          letter = "b";
+        }
+        if ("QWERTYUIOPASDFGHJKLZXCVBNMb".indexOf(letter) === -1) {
+          return;
+        }
+        if (colorings[letter] !== "wrong") {
+          setActive(letter);
+        }
+      };
+      const keyup = (e: KeyboardEvent) => {
+        let letter = e.key.toUpperCase();
+        if (letter === "BACKSPACE") {
+          letter = "b";
+        }
+        if ("QWERTYUIOPASDFGHJKLZXCVBNMb".indexOf(letter) === -1) {
+          return;
+        }
+        setActive(null);
+        if (letter && colorings[letter] !== "wrong") {
+          onKeyPress(letter);
+        }
+      };
+      document.addEventListener("keydown", keydown);
+      document.addEventListener("keyup", keyup);
       div.current.addEventListener("mousedown", touchstart);
       div.current.addEventListener("mouseup", touchend);
       div.current.addEventListener("touchstart", touchstart);
@@ -269,6 +293,8 @@ const Keyboard: React.FC<{
       div.current.addEventListener("touchend", touchend);
       div.current.addEventListener("touchcancel", touchcancel);
       return () => {
+        document.removeEventListener("keydown", keydown);
+        document.removeEventListener("keyup", keyup);
         div.current?.removeEventListener("mousedown", touchstart);
         div.current?.removeEventListener("mouseup", touchend);
         div.current?.removeEventListener("touchstart", touchstart);
@@ -384,6 +410,12 @@ export default function App() {
   const [answer, setAnswer] = useState(() => {
     return words[(Math.random() * words.length) | 0];
   });
+
+  const letterBoxSize = Math.min(
+    64,
+    (containerSize.width - 32 - (answer.length - 1) * 8) / answer.length
+  );
+
   useEffect(() => {
     const handler = () => {
       setContainerSize({
@@ -506,7 +538,7 @@ export default function App() {
   return (
     <div
       style={{
-        backgroundColor: colors.dark,
+        backgroundColor: colors.black,
         flex: 1,
         height: "100vh",
         maxHeight: "-webkit-fill-available",
@@ -545,7 +577,7 @@ export default function App() {
                 <Line
                   word={attempt}
                   coloring={colorings.attemptColorings[i]}
-                  containerSize={containerSize}
+                  letterBoxSize={letterBoxSize}
                 />
               </div>
             ))}
@@ -574,118 +606,128 @@ export default function App() {
                   word={inputValue.padEnd(5, " ")}
                   coloring={[...new Array(answer.length)].map(() => "unknown")}
                   letterHints={colorings.deduced}
-                  containerSize={containerSize}
+                  letterBoxSize={letterBoxSize}
                 />
               </div>
             )}
 
-            {(showGreenHelper === "show-now" ||
-              showOrangeHelper === "show-now") && (
-              <div style={{ padding: 16 }}>
-                {showGreenHelper === "show-now" && (
-                  <T style={{ marginBottom: 16, color: colors.light }}>
-                    <div
-                      style={{
-                        width: 24,
-                        height: 24,
-                        marginRight: 8,
-                        borderRadius: 4,
-                        backgroundColor: colors.green,
-                      }}
-                    />{" "}
-                    correct letter, right place
-                  </T>
-                )}
-                {showOrangeHelper === "show-now" && (
-                  <T style={{ marginBottom: 16, color: colors.lightYellow }}>
-                    <div
-                      style={{
-                        width: 24,
-                        height: 24,
-                        marginRight: 8,
-                        borderRadius: 4,
-                        backgroundColor: colors.yellow,
-                      }}
-                    />{" "}
-                    correct letter, wrong place
-                  </T>
-                )}
-              </div>
-            )}
-
-            {gameState === "play" && remainingAttempts === maxAttempts && (
-              <T
-                style={{
-                  marginTop: 32,
-                  marginBottom: 16,
-                  justifyContent: "center",
-                }}
-              >
-                Guess the word!
-              </T>
-            )}
-
-            <div style={{ flex: 1 }} />
-          </div>
-          {gameState === "play" && isFirstPlaythrough && (
-            <T style={{ marginBottom: 16 }}>
-              {remainingAttempts === maxAttempts
-                ? ""
-                : `${remainingAttempts} attempt${
-                    remainingAttempts === 1 ? "" : "s"
-                  } remaining.`}
-            </T>
-          )}
-
-          {gameState === "win" && (
             <div
               style={{
-                marginTop: 32,
                 display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
                 flexDirection: "column",
+                width: letterBoxSize * 5 + 8 * 4,
+                margin: "0 auto",
               }}
             >
-              <T
-                style={{
-                  marginBottom: 32,
-                  textAlign: "center",
-                  color: colors.green,
-                }}
-              >
-                You win!
-              </T>
-              {playAgainButton}
-            </div>
-          )}
+              {(showGreenHelper === "show-now" ||
+                showOrangeHelper === "show-now") && (
+                <div style={{ marginTop: 16, marginBottom: 16 }}>
+                  {showGreenHelper === "show-now" && (
+                    <T style={{ marginBottom: 16, color: colors.light }}>
+                      <div
+                        style={{
+                          width: 24,
+                          height: 24,
+                          marginRight: 8,
+                          borderRadius: 4,
+                          backgroundColor: colors.green,
+                        }}
+                      />{" "}
+                      correct letter, right place
+                    </T>
+                  )}
+                  {showOrangeHelper === "show-now" && (
+                    <T style={{ marginBottom: 16, color: colors.lightYellow }}>
+                      <div
+                        style={{
+                          width: 24,
+                          height: 24,
+                          marginRight: 8,
+                          borderRadius: 4,
+                          backgroundColor: colors.yellow,
+                        }}
+                      />{" "}
+                      correct letter, wrong place
+                    </T>
+                  )}
+                </div>
+              )}
 
-          {gameState === "lose" && (
-            <div style={{ marginTop: 16 }}>
-              <T
-                style={{
-                  marginBottom: 16,
-                  textAlign: "center",
-                  display: "block",
-                }}
-              >
-                Better luck next time!
-              </T>
-              <T
-                style={{
-                  marginBottom: 32,
-                  textAlign: "center",
-                  display: "block",
-                }}
-              >
-                The solution was{" "}
-                <span style={{ marginLeft: 4, color: colors.yellow }}>
-                  {answer}
-                </span>
-              </T>
-              {playAgainButton}
+              {gameState === "play" && remainingAttempts === maxAttempts && (
+                <T
+                  style={{
+                    marginTop: 32,
+                    marginBottom: 16,
+                    justifyContent: "center",
+                  }}
+                >
+                  Guess the word!
+                </T>
+              )}
+
+              <div style={{ flex: 1 }} />
+
+              {gameState === "play" && isFirstPlaythrough && (
+                <T style={{ marginBottom: 16 }}>
+                  {remainingAttempts === maxAttempts
+                    ? ""
+                    : `${remainingAttempts} attempt${
+                        remainingAttempts === 1 ? "" : "s"
+                      } remaining.`}
+                </T>
+              )}
+
+              {gameState === "win" && (
+                <div
+                  style={{
+                    marginTop: 32,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexDirection: "column",
+                  }}
+                >
+                  <T
+                    style={{
+                      marginBottom: 32,
+                      textAlign: "center",
+                      color: colors.green,
+                    }}
+                  >
+                    You win!
+                  </T>
+                  {playAgainButton}
+                </div>
+              )}
+
+              {gameState === "lose" && (
+                <div style={{ marginTop: 16 }}>
+                  <T
+                    style={{
+                      marginBottom: 16,
+                      textAlign: "center",
+                      display: "block",
+                    }}
+                  >
+                    Better luck next time!
+                  </T>
+                  <T
+                    style={{
+                      marginBottom: 32,
+                      textAlign: "center",
+                      display: "block",
+                    }}
+                  >
+                    The solution was{" "}
+                    <span style={{ marginLeft: 4, color: colors.yellow }}>
+                      {answer}
+                    </span>
+                  </T>
+                  {playAgainButton}
+                </div>
+              )}
             </div>
-          )}
+          </div>
 
           {gameState === "play" && (
             <div
@@ -725,12 +767,13 @@ const styles = {
     display: "flex",
     flexDirection: "column" as const,
     flex: 1,
-    border: "1px solid black",
     padding: 16,
     width: "100%",
     maxWidth: containerMaxWidth,
     margin: "0 auto",
     alignSelf: "center",
     overflow: "hidden",
+    backgroundColor: colors.dark,
+    boxShadow: "0px 0px 32px " + colors.extraBlack + "88",
   },
 };
