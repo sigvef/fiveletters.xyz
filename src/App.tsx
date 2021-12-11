@@ -133,6 +133,7 @@ const Line: React.FC<{
   const size = letterBoxSize;
   return (
     <div
+      //@ts-expect-error
       ref={ref}
       style={{
         display: "flex",
@@ -312,6 +313,7 @@ const Keyboard: React.FC<{
         position: "relative",
         height: keyHeight * rows.length + 4 * (rows.length - 1),
       }}
+      //@ts-expect-error
       ref={div}
     >
       {rows.map((row, j) =>
@@ -602,6 +604,7 @@ export default function App() {
                 }}
               >
                 <Line
+                  //@ts-expect-error
                   ref={inputLineRef}
                   word={inputValue.padEnd(5, " ")}
                   coloring={[...new Array(answer.length)].map(() => "unknown")}
