@@ -51,11 +51,11 @@ let animationTimeAccumulator = 0;
 const animationLoop = (time: number) => {
   animationTimeAccumulator += time - previousTime;
   const frameLength = 1000 / 60;
-  let count = 0;
+  let count = 1;
   while (animationTimeAccumulator >= frameLength) {
     animationTimeAccumulator -= frameLength;
     count = 0;
-    const epsilon = 0.001;
+    const epsilon = 0.0000001;
     let loopBuster = 0;
     for (const key in animations) {
       count++;
@@ -96,7 +96,7 @@ const startAnimation = (key: string, animation: Animation) => {
   animations[key] = animation;
   isRunning = true;
   previousTime = performance.now();
-  animationTimeAccumulator = 1000 / 60;
+  animationTimeAccumulator = 1000 / 60 + 0.00001;
   requestAnimationFrame(animationLoop);
 };
 
