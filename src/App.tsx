@@ -379,6 +379,7 @@ export default function App() {
     height: window.innerHeight,
   });
   const [gameState, setGameState] = useState<"play" | "win" | "lose">("play");
+  const [isFirstPlaythrough, setIsFirstPlaythrough] = useState(true);
   const inputLineRef = useRef<HTMLDivElement | null>();
   const [answer, setAnswer] = useState(() => {
     return words[(Math.random() * words.length) | 0];
@@ -466,10 +467,14 @@ export default function App() {
         setGameState("play");
         setAttempts([]);
         setAnswer(words[(Math.random() * words.length) | 0]);
+        setIsFirstPlaythrough(false);
       }}
       style={{
         borderRadius: 999,
         alignSelf: "center",
+        justifyContent: "center",
+        alignItems: "center",
+        display: "flex",
       }}
     >
       <div
@@ -617,7 +622,7 @@ export default function App() {
 
             <div style={{ flex: 1 }} />
           </div>
-          {gameState === "play" && (
+          {gameState === "play" && isFirstPlaythrough && (
             <T style={{ marginBottom: 16 }}>
               {remainingAttempts === maxAttempts
                 ? ""
@@ -625,9 +630,6 @@ export default function App() {
                     remainingAttempts === 1 ? "" : "s"
                   } remaining.`}
             </T>
-          )}
-          {gameState === "lose" && (
-            <T style={{ marginBottom: 32 }}>You are out of attempts!</T>
           )}
 
           {gameState === "win" && (
@@ -655,12 +657,26 @@ export default function App() {
 
           {gameState === "lose" && (
             <div style={{ marginTop: 16 }}>
-              <T style={{ marginBottom: 16, textAlign: "center" }}>
+              <T
+                style={{
+                  marginBottom: 16,
+                  textAlign: "center",
+                  display: "block",
+                }}
+              >
                 Better luck next time!
               </T>
-              <T style={{ marginBottom: 32, textAlign: "center" }}>
-                The solution was{"  "}
-                <span style={{ color: colors.yellow }}>{answer}</span>
+              <T
+                style={{
+                  marginBottom: 32,
+                  textAlign: "center",
+                  display: "block",
+                }}
+              >
+                The solution was{" "}
+                <span style={{ marginLeft: 4, color: colors.yellow }}>
+                  {answer}
+                </span>
               </T>
               {playAgainButton}
             </div>
