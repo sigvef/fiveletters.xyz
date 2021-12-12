@@ -551,12 +551,13 @@ export default function App() {
                     display: "flex",
                     justifyContent: "center",
                     alignItems: "center",
-                    opacity: attempts.length > 0 ? 1 : 0,
+                    opacity: !isFirstGame || attempts.length > 1 ? 1 : 0,
                     transform:
                       attempts.length > 0
                         ? "translateY(0px)"
                         : "translateY(8px)",
-                    pointerEvents: attempts.length > 0 ? "all" : "none",
+                    pointerEvents:
+                      !isFirstGame || attempts.length > 1 ? "all" : "none",
                   }}
                 >
                   <a
@@ -591,12 +592,13 @@ export default function App() {
                     display: "flex",
                     justifyContent: "center",
                     alignItems: "center",
-                    opacity: attempts.length > 0 ? 1 : 0,
+                    opacity: !isFirstGame || attempts.length > 1 ? 1 : 0,
                     transform:
                       attempts.length > 0
                         ? "translateY(0px)"
                         : "translateY(16px)",
-                    pointerEvents: attempts.length > 0 ? "all" : "none",
+                    pointerEvents:
+                      !isFirstGame || attempts.length > 1 ? "all" : "none",
                   }}
                 >
                   <a
