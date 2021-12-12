@@ -883,6 +883,49 @@ export default function App() {
                     Hint
                   </a>
                 </T>
+                <T
+                  className="animate-all-fast"
+                  style={{
+                    marginBottom: 16,
+                    marginLeft: 16,
+                    color: colors.black,
+                    alignSelf: "flex-end",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    opacity: attempts.length > 0 ? 1 : 0,
+                    transform:
+                      attempts.length > 0
+                        ? "translateY(0px)"
+                        : "translateY(16px)",
+                    pointerEvents: attempts.length > 0 ? "all" : "none",
+                  }}
+                >
+                  <a
+                    href="#"
+                    style={{ color: colors.black }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (!isPremium) {
+                        setShowPremiumModal(true);
+                        return;
+                      }
+                      fetch(
+                        "https://api.dictionaryapi.dev/api/v2/entries/en/" +
+                          attempts[attempts.length - 1].toLowerCase()
+                      )
+                        .then((response) => response.json())
+                        .then((data) =>
+                          alert(
+                            data[0]?.meanings[0]?.definitions[0]?.definition ||
+                              "Unknown."
+                          )
+                        );
+                    }}
+                  >
+                    Define
+                  </a>
+                </T>
                 <div style={{ flex: 1 }} />
                 {isPremium && (
                   <T
