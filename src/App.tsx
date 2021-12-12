@@ -49,6 +49,7 @@ export default function App() {
   };
   const [showPremiumModal, _setShowPremiumModal] = useState(false);
   const [showStatsModal, setShowStatsModal] = useState(false);
+  const [isFirstGame, setIsFirstGame] = useState(true);
 
   const setShowPremiumModal = (value: boolean) => {
     _setShowPremiumModal(value);
@@ -198,6 +199,7 @@ export default function App() {
     <Button
       onClick={() => {
         setGameState("play");
+        setIsFirstGame(false);
         gameId.current = generateGameId();
         setAttempts([]);
         setHints([]);
@@ -425,17 +427,19 @@ export default function App() {
                 </div>
               )}
 
-              {gameState === "play" && remainingAttempts === maxAttempts && (
-                <div
-                  style={{
-                    marginTop: 32,
-                    marginBottom: 16,
-                    justifyContent: "center",
-                  }}
-                >
-                  Guess the word.
-                </div>
-              )}
+              {gameState === "play" &&
+                isFirstGame &&
+                remainingAttempts === maxAttempts && (
+                  <div
+                    style={{
+                      marginTop: 32,
+                      marginBottom: 16,
+                      justifyContent: "center",
+                    }}
+                  >
+                    Guess the word.
+                  </div>
+                )}
 
               <div style={{ flex: 1 }} />
 
