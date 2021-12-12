@@ -4,25 +4,15 @@ import { Coloring, Colorings, getAllColorings } from "./game";
 import { words } from "./words";
 import backspaceImage from "./assets/backspace.png";
 import { CheckCircleFillIcon, RocketIcon, XIcon } from "@primer/octicons-react";
+import { colors } from "./colors";
+import { Button } from "./Button";
+import { T } from "./text";
 
 const containerMaxWidth = 560;
 
 const allWordsSet = new Set(allWords);
 
 let hasBootstrappedGumroad = false;
-
-const colors = {
-  extraBlack: "#031514",
-  black: "#0c2629",
-  dark: "#265353",
-  darkContrastText: "#003c3c",
-  green: "#2a9d8f",
-  yellow: "#e9c46a",
-  lightYellow: "#b5ac97",
-  light: "#6ea7a5",
-  white: "white",
-  red: "#e76f51",
-};
 
 const borderRadius = 8;
 
@@ -102,29 +92,6 @@ const startAnimation = (key: string, animation: Animation) => {
   previousTime = performance.now();
   animationTimeAccumulator = 1000 / 60 + 0.00001;
   requestAnimationFrame(animationLoop);
-};
-
-const T: React.FC<{ style?: any; className?: string }> = ({
-  style,
-  children,
-  className,
-}) => {
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        fontSize: 22,
-        lineHeight: "1.33",
-        color: colors.extraBlack,
-        ...style,
-      }}
-      className={className}
-    >
-      {children}
-    </div>
-  );
 };
 
 const Line: React.FC<{
@@ -1218,37 +1185,12 @@ export default function App() {
                       </div>
                     ))}
 
-                    <a
+                    <Button
                       href="https://fiveletters.gumroad.com/l/yjxbev?wanted=true"
                       data-gumroad-single-product="true"
-                      style={{
-                        marginTop: 16,
-                        borderRadius: 999,
-                        alignSelf: "center",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        display: "flex",
-                        cursor: "pointer",
-                        color: colors.light,
-                        textDecoration: "none",
-                        boxShadow: "0px 2px 4px " + colors.dark + "88",
-                      }}
                     >
-                      <div
-                        style={{
-                          paddingLeft: 32,
-                          paddingRight: 32,
-                          paddingTop: 16,
-                          paddingBottom: 16,
-                          borderRadius: 999,
-                          backgroundColor: colors.extraBlack,
-                          alignSelf: "center",
-                          display: "flex",
-                        }}
-                      >
-                        <T style={{ color: colors.light }}>Get Premium</T>
-                      </div>
-                    </a>
+                      Get Premium
+                    </Button>
                     <T style={{ fontSize: 16 }}>
                       <button
                         onClick={() => {
