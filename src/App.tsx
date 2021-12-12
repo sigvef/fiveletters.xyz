@@ -6,17 +6,15 @@ import React, {
   useState,
 } from "react";
 import { allWords } from "./allwords";
-import { Coloring, generateGameId, getAllColorings, HelperState } from "./game";
+import { generateGameId, getAllColorings, HelperState } from "./game";
 import { words } from "./words";
-import {
-  backgroundColors,
-  borderRadius,
-  colors,
-  containerMaxWidth,
-  foregroundColors,
-} from "./colors";
+import { colors, containerMaxWidth } from "./colors";
 import { Button } from "./Button";
-import { capitalizeFirst, startAnimation } from "./utils";
+import {
+  capitalizeFirst,
+  isSuperTinyMobileScreen,
+  startAnimation,
+} from "./utils";
 import { Keyboard } from "./Keyboard";
 import { verifyLicense } from "./api";
 import { PaymentModal } from "./PaymentModal";
@@ -82,9 +80,11 @@ export default function App() {
     return words[(Math.random() * words.length) | 0];
   });
 
+  const letterGutter = isSuperTinyMobileScreen(containerSize.height) ? 4 : 8;
   const letterBoxSize = Math.min(
     64,
-    (containerSize.width - 32 - (answer.length - 1) * 8) / answer.length
+    (containerSize.width - 32 - (answer.length - 1) * letterGutter) /
+      answer.length
   );
 
   useEffect(() => {
@@ -278,8 +278,16 @@ export default function App() {
               textAlign: "center",
               opacity: hasNotMadeAnyAttemptYet ? 1 : 1,
               height: 32,
-              marginTop: hasNotMadeAnyAttemptYet ? 32 : -64,
-              marginBottom: hasNotMadeAnyAttemptYet ? 64 : 32 + 16,
+              marginTop: hasNotMadeAnyAttemptYet
+                ? isSuperTinyMobileScreen(containerSize.height)
+                  ? 16
+                  : 32
+                : -64,
+              marginBottom: hasNotMadeAnyAttemptYet
+                ? isSuperTinyMobileScreen(containerSize.height)
+                  ? 32
+                  : 64
+                : 32 + (isSuperTinyMobileScreen(containerSize.height) ? 0 : 16),
               fontSize: 32,
               fontWeight: "bold",
               color: colors.extraBlack,
@@ -291,6 +299,7 @@ export default function App() {
           <div
             style={{
               flex: 1,
+              overflowY: "auto",
               marginLeft: -16,
               marginRight: -16,
               marginBottom: 16,
@@ -302,6 +311,7 @@ export default function App() {
                   word={attempt}
                   coloring={colorings.attemptColorings[i]}
                   letterBoxSize={letterBoxSize}
+                  gutterSize={letterGutter}
                 />
               </div>
             ))}
@@ -319,6 +329,7 @@ export default function App() {
                   coloring={[...new Array(answer.length)].map(() => "unknown")}
                   letterHints={colorings.deduced}
                   letterBoxSize={letterBoxSize}
+                  gutterSize={letterGutter}
                 />
               </div>
             )}
@@ -333,6 +344,7 @@ export default function App() {
                       word={"     "}
                       coloring={allOutlineArray}
                       letterBoxSize={letterBoxSize}
+                      gutterSize={letterGutter}
                     />
                   </div>
                 ))}
@@ -343,17 +355,30 @@ export default function App() {
               style={{
                 display: "flex",
                 flexDirection: "column",
-                width: letterBoxSize * 5 + 8 * 4,
+                width: letterBoxSize * 5 + letterGutter * 4,
                 margin: "0 auto",
               }}
             >
               {(showGreenHelper === "show-now" ||
                 showOrangeHelper === "show-now") && (
-                <div style={{ marginTop: 16, marginBottom: 16 }}>
+                <div
+                  style={{
+                    marginTop: isSuperTinyMobileScreen(containerSize.height)
+                      ? 8
+                      : 16,
+                    marginBottom: isSuperTinyMobileScreen(containerSize.height)
+                      ? 8
+                      : 16,
+                  }}
+                >
                   {showGreenHelper === "show-now" && (
                     <div
                       style={{
-                        marginBottom: 16,
+                        marginBottom: isSuperTinyMobileScreen(
+                          containerSize.height
+                        )
+                          ? 8
+                          : 16,
                         color: colors.light,
                         display: "flex",
                         alignItems: "center",
@@ -374,7 +399,11 @@ export default function App() {
                   {showOrangeHelper === "show-now" && (
                     <div
                       style={{
-                        marginBottom: 16,
+                        marginBottom: isSuperTinyMobileScreen(
+                          containerSize.height
+                        )
+                          ? 8
+                          : 16,
                         color: colors.lightYellow,
                         display: "flex",
                         alignItems: "center",
@@ -412,7 +441,9 @@ export default function App() {
               {gameState === "win" && (
                 <div
                   style={{
-                    marginTop: 32,
+                    marginTop: isSuperTinyMobileScreen(containerSize.height)
+                      ? 8
+                      : 32,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -421,7 +452,11 @@ export default function App() {
                 >
                   <div
                     style={{
-                      marginBottom: 32,
+                      marginBottom: isSuperTinyMobileScreen(
+                        containerSize.height
+                      )
+                        ? 8
+                        : 32,
                       textAlign: "center",
                       color: colors.green,
                     }}
@@ -432,7 +467,12 @@ export default function App() {
 
                   <a
                     href="#"
-                    style={{ color: colors.black, marginTop: 32 }}
+                    style={{
+                      color: colors.black,
+                      marginTop: isSuperTinyMobileScreen(containerSize.height)
+                        ? 16
+                        : 32,
+                    }}
                     onClick={(e) => {
                       if (!isPremium) {
                         setShowPremiumModal(true);
@@ -466,7 +506,11 @@ export default function App() {
                   </div>
                   <div
                     style={{
-                      marginBottom: 32,
+                      marginBottom: isSuperTinyMobileScreen(
+                        containerSize.height
+                      )
+                        ? 16
+                        : 32,
                       textAlign: "center",
                       display: "block",
                     }}

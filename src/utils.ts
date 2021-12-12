@@ -1,6 +1,9 @@
 export const capitalizeFirst = (value: string) => {
   return value.slice(0, 1).toUpperCase() + value.slice(1);
 };
+
+export const isSuperTinyMobileScreen = (height: number) => height <= 599;
+
 export const makeFakeTouchList = (e: MouseEvent) => {
   return [
     {

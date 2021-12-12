@@ -8,6 +8,7 @@ export const Line: React.FC<{
   coloring: Coloring[];
   letterHints?: string[];
   letterBoxSize: number;
+  gutterSize: number;
 }> = memo(
   forwardRef((props, ref) => {
     const { word, coloring, letterHints, letterBoxSize } = props;
@@ -60,8 +61,8 @@ export const Line: React.FC<{
                 width: size,
                 height: size,
                 borderRadius,
-                marginLeft: 4,
-                marginRight: 4,
+                marginLeft: props.gutterSize / 2,
+                marginRight: props.gutterSize / 2,
                 justifyContent: "center",
                 alignItems: "center",
                 backgroundColor: backgroundColors[coloring[i]],
