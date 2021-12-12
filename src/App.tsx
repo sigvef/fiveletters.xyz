@@ -9,6 +9,8 @@ const containerMaxWidth = 560;
 
 const allWordsSet = new Set(allWords);
 
+let hasBootstrappedGumroad = false;
+
 const colors = {
   extraBlack: "#031514",
   black: "#0c2629",
@@ -433,7 +435,18 @@ export default function App() {
     );
     _setIsPremium(value);
   };
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showPremiumModal, _setShowPremiumModal] = useState(false);
+
+  const setShowPremiumModal = (value) => {
+    _setShowPremiumModal(value);
+    if (!hasBootstrappedGumroad) {
+      hasBootstrappedGumroad = true;
+      const script = document.createElement("script");
+      script.src = "https://gumroad.com/js/gumroad.js";
+      document.body.appendChild(script);
+    }
+  };
+
   const [showPaymentSuccess, setShowPaymentSuccess] = useState<
     boolean | "unlocked-from-code"
   >(false);
