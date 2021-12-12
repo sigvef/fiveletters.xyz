@@ -9,6 +9,10 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  font-size: 22px;
+  line-height: 1.33;
+  color: #031514;
 }
 
 * {

@@ -6,6 +6,8 @@ export type Coloring =
   | "outline";
 export type Colorings = { [key: string]: Coloring };
 
+export type HelperState = "not-shown-yet" | "show-now" | "never-show-again";
+
 export function getAllColorings(
   answer: string,
   attempts: string[],

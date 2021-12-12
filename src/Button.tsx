@@ -1,11 +1,16 @@
 import { HTMLProps } from "react";
 import { colors } from "./colors";
-import { T } from "./text";
 
-export const Button: React.FC<HTMLProps<HTMLAnchorElement>> = (props) => (
+export const Button: React.FC<
+  HTMLProps<HTMLAnchorElement> & {
+    buttonColor?: string;
+    textColor?: string;
+    shadowColor?: string;
+  }
+> = (props) => (
   <a
-    href="https://fiveletters.gumroad.com/l/yjxbev?wanted=true"
-    data-gumroad-single-product="true"
+    href="#"
+    {...props}
     style={{
       marginTop: 16,
       borderRadius: 999,
@@ -14,25 +19,17 @@ export const Button: React.FC<HTMLProps<HTMLAnchorElement>> = (props) => (
       alignItems: "center",
       display: "flex",
       cursor: "pointer",
-      color: colors.light,
       textDecoration: "none",
-      boxShadow: "0px 2px 4px " + colors.dark + "88",
+      boxShadow: "0px 2px 4px " + (props.shadowColor ?? colors.dark) + "88",
+      paddingLeft: 32,
+      paddingRight: 32,
+      paddingTop: 16,
+      paddingBottom: 16,
+      background: props.buttonColor ?? colors.extraBlack,
+      color: props.textColor ?? colors.light,
+      ...props.style,
     }}
-    {...props}
   >
-    <div
-      style={{
-        paddingLeft: 32,
-        paddingRight: 32,
-        paddingTop: 16,
-        paddingBottom: 16,
-        borderRadius: 999,
-        backgroundColor: colors.extraBlack,
-        alignSelf: "center",
-        display: "flex",
-      }}
-    >
-      <T style={{ color: colors.light }}>{props.children}</T>
-    </div>
+    {props.children}
   </a>
 );

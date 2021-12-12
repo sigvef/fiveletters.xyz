@@ -1,98 +1,24 @@
 import React, { useEffect, useRef, useState } from "react";
 import { allWords } from "./allwords";
-import { Coloring, Colorings, getAllColorings } from "./game";
+import { Coloring, getAllColorings, HelperState } from "./game";
 import { words } from "./words";
-import backspaceImage from "./assets/backspace.png";
-import { CheckCircleFillIcon, RocketIcon, XIcon } from "@primer/octicons-react";
-import { colors } from "./colors";
+import { RocketIcon } from "@primer/octicons-react";
+import {
+  backgroundColors,
+  borderRadius,
+  colors,
+  containerMaxWidth,
+  foregroundColors,
+} from "./colors";
 import { Button } from "./Button";
-import { T } from "./text";
-
-const containerMaxWidth = 560;
+import { capitalizeFirst, startAnimation } from "./utils";
+import { Keyboard } from "./Keyboard";
+import { verifyLicense } from "./api";
+import { PaymentModal } from "./PaymentModal";
 
 const allWordsSet = new Set(allWords);
 
 let hasBootstrappedGumroad = false;
-
-const borderRadius = 8;
-
-const makeFakeTouchList = (e: MouseEvent) => {
-  return [
-    {
-      clientX: e.clientX,
-      clientY: e.clientY,
-      identifier: Math.random(),
-    },
-  ];
-};
-
-interface Animation {
-  value: number;
-  speed: number;
-  friction: number;
-  springiness: number;
-  properties: {
-    [key: string]: (value: number) => string;
-  };
-  element: HTMLElement;
-}
-
-const animations: { [key: string]: Animation } = {};
-
-let previousTime = performance.now();
-let isRunning = false;
-let animationTimeAccumulator = 0;
-const animationLoop = (time: number) => {
-  animationTimeAccumulator += time - previousTime;
-  const frameLength = 1000 / 60;
-  let count = 1;
-  while (animationTimeAccumulator >= frameLength) {
-    animationTimeAccumulator -= frameLength;
-    count = 0;
-    const epsilon = 0.0000001;
-    let loopBuster = 0;
-    for (const key in animations) {
-      count++;
-      const animation = animations[key];
-      loopBuster++;
-      if (loopBuster > 1000) {
-        debugger;
-      }
-      const originalValue = animation.value;
-      animation.value = animation.value + animation.speed;
-      animation.speed =
-        animation.springiness * animation.speed +
-        (1 - animation.springiness) * -animation.value;
-      animation.speed *= animation.friction;
-      if (
-        Math.abs(originalValue - animation.value) < epsilon &&
-        Math.abs(animation.value) < epsilon
-      ) {
-        animation.value = 0;
-        delete animations[key];
-      }
-      for (const [property, getValue] of Object.entries(animation.properties)) {
-        //@ts-expect-error dynamic style setting
-        animation.element.style[property] = getValue(animation.value);
-      }
-    }
-  }
-
-  if (count > 0) {
-    requestAnimationFrame(animationLoop);
-  } else {
-    isRunning = false;
-  }
-  previousTime = time;
-};
-
-const startAnimation = (key: string, animation: Animation) => {
-  animations[key] = animation;
-  isRunning = true;
-  previousTime = performance.now();
-  animationTimeAccumulator = 1000 / 60 + 0.00001;
-  requestAnimationFrame(animationLoop);
-};
 
 const Line: React.FC<{
   word: string;
@@ -159,237 +85,7 @@ const Line: React.FC<{
   );
 });
 
-const Keyboard: React.FC<{
-  colorings: Colorings;
-  onKeyPress: (letter: string) => void;
-}> = ({ colorings, onKeyPress }) => {
-  const div = useRef<HTMLDivElement>();
-  const currentTouch = useRef<any>();
-  const rows = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNMb"];
-  const longestRow = rows.reduce((row, accumulator) =>
-    row.length > accumulator.length ? row : accumulator
-  );
-  const totalWidth = Math.min(containerMaxWidth, window.innerWidth) - 32;
-  const keyWidth =
-    (totalWidth - (longestRow.length - 1) * 4) / longestRow.length;
-  const keyHeight = 48;
-  useEffect(() => {
-    if (div.current) {
-      const getCurrentKey = (
-        touches: Pick<Touch, "clientX" | "clientY" | "identifier">[]
-      ) => {
-        if (div.current && touches.length > 0) {
-          const rect = div.current.getBoundingClientRect();
-          const x = touches[0].clientX - rect.left;
-          const y = touches[0].clientY - rect.top;
-          const j = ((y + 2) / (keyHeight + 4)) | 0;
-          const i = Math.max(
-            Math.min(
-              ((-0.5 * (j * (keyWidth + 4)) + x - 16 + 2) / (keyWidth + 4)) | 0,
-              rows[j].length - 1
-            ),
-            0
-          );
-          const letter = rows[j][i];
-          return letter;
-        }
-        return null;
-      };
-      const setActive = (letter: string | null) => {
-        if (div.current) {
-          [...div.current.querySelectorAll(".key.active")].forEach((key) => {
-            key.classList.remove("active");
-          });
-          if (letter) {
-            div.current
-              .querySelector(`.key[data-letter=${letter}]`)
-              ?.classList.add("active");
-          }
-        }
-      };
-      const touchstart = (e: TouchEvent | MouseEvent) => {
-        e.preventDefault();
-        const letter = getCurrentKey(
-          "touches" in e ? [...e.touches] : makeFakeTouchList(e)
-        );
-        setActive(colorings[letter || ""] === "wrong" ? null : letter);
-      };
-      const touchmove = (e: TouchEvent | MouseEvent) => {
-        e.preventDefault();
-        const letter = getCurrentKey(
-          "touches" in e ? [...e.touches] : makeFakeTouchList(e)
-        );
-        setActive(colorings[letter || ""] === "wrong" ? null : letter);
-      };
-      const touchend = (e: TouchEvent | MouseEvent) => {
-        e.preventDefault();
-        setActive(null);
-        const letter = getCurrentKey(
-          "touches" in e ? [...e.changedTouches] : makeFakeTouchList(e)
-        );
-        if (letter && colorings[letter] !== "wrong") {
-          onKeyPress(letter);
-        }
-      };
-      const touchcancel = (e: TouchEvent) => {
-        e.preventDefault();
-        setActive(null);
-      };
-      const keydown = (e: KeyboardEvent) => {
-        let letter = e.key.toUpperCase();
-        if (letter === "BACKSPACE") {
-          letter = "b";
-        }
-        if ("QWERTYUIOPASDFGHJKLZXCVBNMb".indexOf(letter) === -1) {
-          return;
-        }
-        if (colorings[letter] !== "wrong") {
-          setActive(letter);
-        }
-      };
-      const keyup = (e: KeyboardEvent) => {
-        let letter = e.key.toUpperCase();
-        if (letter === "BACKSPACE") {
-          letter = "b";
-        }
-        if ("QWERTYUIOPASDFGHJKLZXCVBNMb".indexOf(letter) === -1) {
-          return;
-        }
-        setActive(null);
-        if (letter && colorings[letter] !== "wrong") {
-          onKeyPress(letter);
-        }
-      };
-      document.addEventListener("keydown", keydown);
-      document.addEventListener("keyup", keyup);
-      div.current.addEventListener("mousedown", touchstart);
-      div.current.addEventListener("mouseup", touchend);
-      div.current.addEventListener("touchstart", touchstart);
-      div.current.addEventListener("touchmove", touchmove);
-      div.current.addEventListener("touchend", touchend);
-      div.current.addEventListener("touchcancel", touchcancel);
-      return () => {
-        document.removeEventListener("keydown", keydown);
-        document.removeEventListener("keyup", keyup);
-        div.current?.removeEventListener("mousedown", touchstart);
-        div.current?.removeEventListener("mouseup", touchend);
-        div.current?.removeEventListener("touchstart", touchstart);
-        div.current?.removeEventListener("touchmove", touchmove);
-        div.current?.removeEventListener("touchend", touchend);
-        div.current?.removeEventListener("touchcancel", touchcancel);
-      };
-    }
-  }, [div.current, onKeyPress]);
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        position: "relative",
-        height: keyHeight * rows.length + 4 * (rows.length - 1),
-      }}
-      //@ts-expect-error
-      ref={div}
-    >
-      {rows.map((row, j) =>
-        [...row].map((letter, i) => (
-          <div
-            key={letter}
-            className="key"
-            data-letter={letter}
-            data-coloring={colorings[letter]}
-            style={{
-              position: "absolute",
-              left: (j * (keyWidth + 4)) / 2 + 16 + (keyWidth + 4) * i,
-              top: (keyHeight + 4) * j,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              pointerEvents: "none",
-              userSelect: "none",
-              borderRadius,
-              width: "b".indexOf(letter) !== -1 ? keyWidth * 2 + 2 : keyWidth,
-              height: keyHeight,
-              ...(letter !== "b"
-                ? {
-                    backgroundColor:
-                      backgroundColors[colorings[letter] || "unknown"],
-                  }
-                : { backgroundColor: colors.dark, marginRight: -34 }),
-            }}
-          >
-            {letter === "b" ? (
-              <img
-                src={backspaceImage}
-                style={{
-                  width: 32,
-                  height: 32,
-                }}
-              />
-            ) : (
-              <span style={{ fontSize: 22, color: colors.black }}>
-                {letter}
-              </span>
-            )}
-          </div>
-        ))
-      )}
-    </div>
-  );
-};
-
 const maxAttempts = 5;
-
-const backgroundColors = {
-  outline: "transparent",
-  unknown: "#f5f5f522",
-  "semi-correct": colors.yellow,
-  correct: colors.green,
-  wrong: colors.black,
-};
-
-const foregroundColors = {
-  outline: "transparent",
-  unknown: colors.extraBlack,
-  "semi-correct": colors.extraBlack,
-  correct: colors.extraBlack,
-  wrong: colors.dark,
-};
-
-const springAnimation = (() => {
-  const inputRange = [];
-  const outputRange = [];
-  const n = 64;
-  let dx = 1;
-  let x = 0;
-  for (let i = 0; i < n; i++) {
-    const t = i / n;
-    inputRange[i] = t;
-    outputRange[i] = x;
-    x += dx;
-    dx = 0.9 * dx + 0.1 * -x;
-    dx *= 0.98;
-  }
-  inputRange.push(1);
-  outputRange.push(0);
-  return { inputRange, outputRange };
-})();
-
-type HelperState = "not-shown-yet" | "show-now" | "never-show-again";
-
-const verifyLicense = (key: string, increase_count?: boolean) =>
-  fetch("https://api.gumroad.com/v2/licenses/verify", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      product_permalink: "yjxbev",
-      license_key: key,
-      increment_uses_count: !!increase_count,
-    }),
-  })
-    .then((response) => response.json())
-    .then((data) => !!data.success);
 
 export default function App() {
   const [isPremium, _setIsPremium] = useState(
@@ -424,15 +120,11 @@ export default function App() {
     }
   };
 
-  const [showPaymentSuccess, setShowPaymentSuccess] = useState<
-    boolean | "unlocked-from-code"
-  >(false);
   const [containerSize, setContainerSize] = useState({
     width: Math.min(containerMaxWidth, window.innerWidth),
     height: window.innerHeight,
   });
   const [gameState, setGameState] = useState<"play" | "win" | "lose">("play");
-  const [isFirstPlaythrough, setIsFirstPlaythrough] = useState(true);
   const inputLineRef = useRef<HTMLDivElement | null>();
   const [answer, setAnswer] = useState(() => {
     return words[(Math.random() * words.length) | 0];
@@ -456,30 +148,8 @@ export default function App() {
       });
     };
     window.addEventListener("resize", handler);
-    const messageHandler = (e: any) => {
-      if (!e.isTrusted) {
-        return;
-      }
-      if (e.origin !== "https://app.gumroad.com") {
-        return;
-      }
-      const data = JSON.parse(e.data);
-      if (
-        data.post_message_name === "sale" &&
-        data.success === true &&
-        data.name === "Premium"
-      ) {
-        //@ts-expect-error
-        window.GumroadOverlay?.iframe?.remove();
-        setIsPremium(true);
-        setShowPaymentSuccess(false);
-        localStorage.setItem("fiveletters.xyz:license_key", data.license_key);
-      }
-    };
-    window.addEventListener("message", messageHandler);
     return () => {
       window.removeEventListener("resize", handler);
-      window.removeEventListener("message", messageHandler);
     };
   }, []);
 
@@ -551,14 +221,13 @@ export default function App() {
   };
 
   const playAgainButton = (
-    <div
+    <Button
       onClick={() => {
         setGameState("play");
         setAttempts([]);
         setHints([]);
         const newAnswer = words[(Math.random() * words.length) | 0];
         setAnswer(newAnswer);
-        setIsFirstPlaythrough(false);
         for (let i = 0; i < answer.length; i++) {
           setTimeout(() => {
             setInputValue(answer.slice(0, i + 1));
@@ -568,30 +237,12 @@ export default function App() {
           makeAttempt(answer, newAnswer, []);
         }, 300 + answer.length * 75);
       }}
-      style={{
-        borderRadius: 999,
-        alignSelf: "center",
-        justifyContent: "center",
-        alignItems: "center",
-        display: "flex",
-        cursor: "pointer",
-      }}
+      buttonColor={colors.green}
+      textColor={colors.black}
+      shadowColor={colors.black}
     >
-      <div
-        style={{
-          paddingLeft: 32,
-          paddingRight: 32,
-          paddingTop: 16,
-          paddingBottom: 16,
-          borderRadius: 999,
-          backgroundColor: colors.green,
-          alignSelf: "center",
-          display: "flex",
-        }}
-      >
-        <T>Play again</T>
-      </div>
-    </div>
+      Play again
+    </Button>
   );
 
   const remainingAttempts = maxAttempts - attempts.length;
@@ -704,7 +355,14 @@ export default function App() {
                 showOrangeHelper === "show-now") && (
                 <div style={{ marginTop: 16, marginBottom: 16 }}>
                   {showGreenHelper === "show-now" && (
-                    <T style={{ marginBottom: 16, color: colors.light }}>
+                    <div
+                      style={{
+                        marginBottom: 16,
+                        color: colors.light,
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
                       <div
                         style={{
                           width: 24,
@@ -715,10 +373,17 @@ export default function App() {
                         }}
                       />{" "}
                       correct letter, right place
-                    </T>
+                    </div>
                   )}
                   {showOrangeHelper === "show-now" && (
-                    <T style={{ marginBottom: 16, color: colors.lightYellow }}>
+                    <div
+                      style={{
+                        marginBottom: 16,
+                        color: colors.lightYellow,
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
                       <div
                         style={{
                           width: 24,
@@ -729,13 +394,13 @@ export default function App() {
                         }}
                       />{" "}
                       correct letter, wrong place
-                    </T>
+                    </div>
                   )}
                 </div>
               )}
 
               {gameState === "play" && remainingAttempts === maxAttempts && (
-                <T
+                <div
                   style={{
                     marginTop: 32,
                     marginBottom: 16,
@@ -743,7 +408,7 @@ export default function App() {
                   }}
                 >
                   Guess the word.
-                </T>
+                </div>
               )}
 
               <div style={{ flex: 1 }} />
@@ -758,7 +423,7 @@ export default function App() {
                     flexDirection: "column",
                   }}
                 >
-                  <T
+                  <div
                     style={{
                       marginBottom: 32,
                       textAlign: "center",
@@ -766,14 +431,21 @@ export default function App() {
                     }}
                   >
                     You win!
-                  </T>
+                  </div>
                   {playAgainButton}
                 </div>
               )}
 
               {gameState === "lose" && (
-                <div style={{ marginTop: 16 }}>
-                  <T
+                <div
+                  style={{
+                    marginTop: 16,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                  }}
+                >
+                  <div
                     style={{
                       marginBottom: 16,
                       textAlign: "center",
@@ -781,8 +453,8 @@ export default function App() {
                     }}
                   >
                     Better luck next time!
-                  </T>
-                  <T
+                  </div>
+                  <div
                     style={{
                       marginBottom: 32,
                       textAlign: "center",
@@ -793,7 +465,7 @@ export default function App() {
                     <span style={{ marginLeft: 4, color: colors.yellow }}>
                       {answer}
                     </span>
-                  </T>
+                  </div>
                   {playAgainButton}
                 </div>
               )}
@@ -810,7 +482,7 @@ export default function App() {
               }}
             >
               <div style={{ display: "flex", alignItems: "flex-end" }}>
-                <T
+                <div
                   className="animate-all-fast"
                   style={{
                     marginBottom: 16,
@@ -849,8 +521,8 @@ export default function App() {
                   >
                     Hint
                   </a>
-                </T>
-                <T
+                </div>
+                <div
                   className="animate-all-fast"
                   style={{
                     marginBottom: 16,
@@ -877,25 +549,30 @@ export default function App() {
                         setShowPremiumModal(true);
                         return;
                       }
+                      const word = attempts[attempts.length - 1].toLowerCase();
                       fetch(
                         "https://api.dictionaryapi.dev/api/v2/entries/en/" +
-                          attempts[attempts.length - 1].toLowerCase()
+                          word
                       )
                         .then((response) => response.json())
                         .then((data) =>
                           alert(
-                            data[0]?.meanings[0]?.definitions[0]?.definition ||
-                              "Unknown."
+                            capitalizeFirst(
+                              `${word}: ${
+                                data[0]?.meanings[0]?.definitions[0]
+                                  ?.definition || "unknown."
+                              }`
+                            )
                           )
                         );
                     }}
                   >
                     Define
                   </a>
-                </T>
+                </div>
                 <div style={{ flex: 1 }} />
                 {isPremium && (
-                  <T
+                  <div
                     style={{
                       marginBottom: 16,
                       marginRight: 16,
@@ -911,10 +588,10 @@ export default function App() {
                     <div style={{ marginLeft: 8 }}>
                       <RocketIcon size={24} />
                     </div>
-                  </T>
+                  </div>
                 )}
                 {!isPremium && (
-                  <T
+                  <div
                     style={{
                       marginBottom: 16,
                       marginRight: 16,
@@ -935,7 +612,7 @@ export default function App() {
                     >
                       Get premium
                     </a>
-                  </T>
+                  </div>
                 )}
               </div>
               <Keyboard
@@ -961,276 +638,11 @@ export default function App() {
         </div>
       </div>
 
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          pointerEvents: showPremiumModal ? "all" : "none",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          data-backdrop="true"
-          onClick={(e) => {
-            //@ts-expect-error
-            if (e.target?.dataset?.backdrop) {
-              setShowPremiumModal(false);
-            }
-          }}
-          className="animate-all-fast blur-bg"
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            opacity: showPremiumModal ? 1 : 0,
-            transform: `translate3D(0, ${showPremiumModal ? 0 : "32px"}, 0)`,
-          }}
-        >
-          <div
-            style={{
-              maxWidth: containerMaxWidth,
-              margin: "0 auto",
-              padding: 16,
-            }}
-          >
-            <div
-              style={{
-                background: colors.light,
-                borderRadius,
-                padding: 32,
-                display: "flex",
-                flexDirection: "column",
-                position: "relative",
-                boxShadow: "0px 8px 16px " + colors.black + "88",
-                maxWidth: 256 + 128 + 32,
-                margin: "0 auto",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                {showPaymentSuccess ? (
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      paddingTop: 16,
-                    }}
-                  >
-                    <RocketIcon size={64} />
-                    <T
-                      style={{
-                        marginTop: 32,
-                        marginBottom: 32,
-                        fontWeight: "bold",
-                      }}
-                    >
-                      Premium unlocked!
-                    </T>
-                    <T
-                      style={{
-                        alignSelf: "flex-start",
-                      }}
-                    >
-                      {showPaymentSuccess !== "unlocked-from-code" &&
-                        "A receipt has been sent to your email. "}
-                      Thank you for supporting Five&nbsp;Letters!
-                    </T>
-
-                    <button
-                      onClick={() => {
-                        setShowPremiumModal(false);
-                      }}
-                      style={{
-                        marginTop: 32,
-                        borderRadius: 999,
-                        alignSelf: "center",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        display: "flex",
-                        cursor: "pointer",
-                        color: colors.light,
-                        textDecoration: "none",
-                        boxShadow: "0px 2px 4px " + colors.dark + "88",
-                        border: 0,
-                      }}
-                    >
-                      <div
-                        style={{
-                          paddingLeft: 32,
-                          paddingRight: 32,
-                          paddingTop: 16,
-                          paddingBottom: 16,
-                          borderRadius: 999,
-                          backgroundColor: colors.extraBlack,
-                          alignSelf: "center",
-                          display: "flex",
-                        }}
-                      >
-                        <T style={{ color: colors.light }}>Resume game</T>
-                      </div>
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <T
-                      style={{
-                        fontWeight: "bold",
-                        marginBottom: 16,
-                        marginLeft: 38,
-                        paddingRight: 32,
-                      }}
-                    >
-                      Five Letters Premium
-                    </T>
-                    <button
-                      onClick={() => {
-                        setShowPremiumModal(false);
-                      }}
-                      style={{
-                        background: "transparent",
-                        border: 0,
-                        position: "absolute",
-                        top: -8,
-                        right: -8,
-                        color: colors.dark,
-                        padding: 16,
-                        borderRadius: 9999,
-                      }}
-                    >
-                      <XIcon size={24} />
-                    </button>
-
-                    <T
-                      style={{
-                        marginLeft: 20,
-                        marginBottom: 16,
-                        alignItems: "flex-end",
-                      }}
-                    >
-                      <span
-                        style={{
-                          color: colors.darkContrastText,
-                          marginBottom: 16,
-                          marginRight: 4,
-                        }}
-                      >
-                        $
-                      </span>
-                      <span style={{ fontSize: 40, fontWeight: "bold" }}>
-                        3
-                      </span>
-                      <span
-                        style={{
-                          marginLeft: 4,
-                          color: colors.darkContrastText,
-                          marginBottom: 6,
-                        }}
-                      >
-                        / mo
-                      </span>
-                    </T>
-                    {[
-                      {
-                        text: "Hints & solutions",
-                        sub: "Get extra hints or see the solution if you get stuck.",
-                      },
-                      {
-                        text: "Statistics & breakdowns",
-                        sub: "Detailed analysis of your own games. (Coming soon!)",
-                      },
-                      { text: "No ads", sub: "Just like the free version!" },
-                      {
-                        text: "Cancel any time",
-                        sub: "",
-                      },
-                    ].map((item) => (
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "flex-start",
-                          marginBottom: 16,
-                        }}
-                      >
-                        <div style={{ marginTop: 2, color: colors.dark }}>
-                          <CheckCircleFillIcon size={24} />
-                        </div>
-                        <T
-                          style={{
-                            marginLeft: 16,
-                            flexDirection: "column",
-                            alignItems: "flex-start",
-                          }}
-                        >
-                          {item.text}
-                          <span
-                            style={{
-                              color: colors.darkContrastText,
-                              fontSize: 16,
-                            }}
-                          >
-                            {item.sub}
-                          </span>
-                        </T>
-                      </div>
-                    ))}
-
-                    <Button
-                      href="https://fiveletters.gumroad.com/l/yjxbev?wanted=true"
-                      data-gumroad-single-product="true"
-                    >
-                      Get Premium
-                    </Button>
-                    <T style={{ fontSize: 16 }}>
-                      <button
-                        onClick={() => {
-                          const license_key =
-                            prompt(
-                              "Paste the license key from your subscription email here:"
-                            ) || "";
-                          if (license_key) {
-                            verifyLicense(license_key, true).then((value) => {
-                              if (value) {
-                                setIsPremium(true);
-                                setShowPaymentSuccess("unlocked-from-code");
-                              } else {
-                                alert("Invalid license key.");
-                              }
-                            });
-                          }
-                        }}
-                        style={{
-                          cursor: "pointer",
-                          border: 0,
-                          textDecoration: "underline",
-                          outline: 0,
-                          alignSelf: "center",
-                          margin: "16px auto 0",
-                          background: "transparent",
-                          fontSize: 16,
-                          color: colors.black,
-                        }}
-                      >
-                        ...or redeem an existing code
-                      </button>
-                    </T>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <PaymentModal
+        visible={showPremiumModal}
+        dismiss={() => setShowPremiumModal(false)}
+        onSuccess={() => setIsPremium(true)}
+      />
     </div>
   );
 }
