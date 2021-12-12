@@ -437,7 +437,7 @@ export default function App() {
   };
   const [showPremiumModal, _setShowPremiumModal] = useState(false);
 
-  const setShowPremiumModal = (value) => {
+  const setShowPremiumModal = (value: boolean) => {
     _setShowPremiumModal(value);
     if (value && !hasBootstrappedGumroad) {
       hasBootstrappedGumroad = true;
