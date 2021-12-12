@@ -300,6 +300,7 @@ export default function App() {
             style={{
               flex: 1,
               overflowY: "auto",
+              overflowX: "hidden",
               marginLeft: -16,
               marginRight: -16,
               marginBottom: 16,
