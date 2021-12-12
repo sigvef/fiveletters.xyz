@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import backspaceImage from "./assets/backspace.png";
 import {
   backgroundColors,
@@ -12,7 +12,7 @@ import { makeFakeTouchList } from "./utils";
 export const Keyboard: React.FC<{
   colorings: Colorings;
   onKeyPress: (letter: string) => void;
-}> = ({ colorings, onKeyPress }) => {
+}> = memo(({ colorings, onKeyPress }) => {
   const div = useRef<HTMLDivElement>();
   const rows = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNMb"];
   const longestRow = rows.reduce((row, accumulator) =>
@@ -186,4 +186,4 @@ export const Keyboard: React.FC<{
       )}
     </div>
   );
-};
+});

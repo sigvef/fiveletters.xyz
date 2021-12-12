@@ -1,8 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { allWords } from "./allwords";
 import { Coloring, getAllColorings, HelperState } from "./game";
 import { words } from "./words";
-import { RocketIcon } from "@primer/octicons-react";
 import {
   backgroundColors,
   borderRadius,
@@ -15,79 +14,20 @@ import { capitalizeFirst, startAnimation } from "./utils";
 import { Keyboard } from "./Keyboard";
 import { verifyLicense } from "./api";
 import { PaymentModal } from "./PaymentModal";
+import { MemoizedRocketIcon } from "./icons";
+import { Line } from "./Line";
 
 const allWordsSet = new Set(allWords);
 
 let hasBootstrappedGumroad = false;
 
-const Line: React.FC<{
-  word: string;
-  coloring: Coloring[];
-  letterHints?: string[];
-  letterBoxSize: number;
-}> = React.forwardRef((props, ref) => {
-  const { word, coloring, letterHints, letterBoxSize } = props;
-  const size = letterBoxSize;
-  return (
-    <div
-      //@ts-expect-error
-      ref={ref}
-      style={{
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      {[...word].map((letter, i) => {
-        return (
-          <div
-            key={i}
-            style={{
-              display: "flex",
-              width: size,
-              height: size,
-              borderRadius,
-              marginLeft: 4,
-              marginRight: 4,
-              justifyContent: "center",
-              alignItems: "center",
-              backgroundColor: backgroundColors[coloring[i]],
-              position: "relative",
-              border:
-                coloring[i] === "outline"
-                  ? "2px dotted " + backgroundColors.unknown
-                  : 0,
-            }}
-          >
-            <span
-              style={{
-                position: "absolute",
-                left: 6,
-                top: 4,
-                fontSize: 14,
-              }}
-            >
-              {letterHints?.[i]?.toUpperCase()}
-            </span>
-            <span
-              style={{
-                fontSize: 32,
-                color: foregroundColors[coloring[i]],
-              }}
-            >
-              {letter.toUpperCase()}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-});
-
 const maxAttempts = 5;
 
 export default function App() {
+  const [, _setForceRefresh] = useState({});
+  const forceRefresh = () => {
+    _setForceRefresh({});
+  };
   const [isPremium, _setIsPremium] = useState(
     localStorage.getItem("fiveletters.xyz:cachedIsPremium") === "true"
   );
@@ -139,6 +79,8 @@ export default function App() {
     const key = localStorage.getItem("fiveletters.xyz:license_key");
     if (key) {
       verifyLicense(key).then(setIsPremium);
+    } else {
+      setIsPremium(false);
     }
 
     const handler = () => {
@@ -161,7 +103,7 @@ export default function App() {
 
   const [attempts, setAttempts] = useState<string[]>([]);
   const [hints, setHints] = useState<number[]>([]);
-  const [inputValue, setInputValue] = useState("");
+  const inputValueRef = useRef("");
 
   const makeAttempt = (attempt: string, answer: string, attempts: string[]) => {
     if (allWordsSet.has(attempt.toUpperCase())) {
@@ -197,8 +139,8 @@ export default function App() {
         }
         return old;
       });
+      inputValueRef.current = "";
       setAttempts((old) => [...old, attempt]);
-      setInputValue("");
       if (attempt === answer) {
         setGameState("win");
       } else if (attempts.length + 1 === maxAttempts) {
@@ -230,7 +172,8 @@ export default function App() {
         setAnswer(newAnswer);
         for (let i = 0; i < answer.length; i++) {
           setTimeout(() => {
-            setInputValue(answer.slice(0, i + 1));
+            inputValueRef.current = answer.slice(0, i + 1);
+            forceRefresh();
           }, 300 + i * 75);
         }
         setTimeout(() => {
@@ -247,8 +190,27 @@ export default function App() {
 
   const remainingAttempts = maxAttempts - attempts.length;
 
-  const colorings = getAllColorings(answer, attempts, hints);
-
+  const colorings = useMemo(
+    () => getAllColorings(answer, attempts, hints),
+    [answer, attempts, hints]
+  );
+  const paymentModalOnDismiss = React.useCallback(
+    () => setShowPremiumModal(false),
+    []
+  );
+  const paymentModalOnSuccess = React.useCallback(() => setIsPremium(true), []);
+  const keyboardOnKeyPress = React.useCallback((letter: string) => {
+    if (letter === "b") {
+      inputValueRef.current = inputValueRef.current.slice(0, -1);
+      forceRefresh();
+    } else {
+      inputValueRef.current = (inputValueRef.current + letter).slice(0, 5);
+      forceRefresh();
+      if (inputValueRef.current.length === 5) {
+        makeAttempt(inputValueRef.current, answer, attempts);
+      }
+    }
+  }, []);
   return (
     <div
       style={{
@@ -317,7 +279,7 @@ export default function App() {
                 <Line
                   //@ts-expect-error
                   ref={inputLineRef}
-                  word={inputValue.padEnd(5, " ")}
+                  word={inputValueRef.current.padEnd(5, " ")}
                   coloring={[...new Array(answer.length)].map(() => "unknown")}
                   letterHints={colorings.deduced}
                   letterBoxSize={letterBoxSize}
@@ -586,7 +548,7 @@ export default function App() {
                   >
                     Premium
                     <div style={{ marginLeft: 8 }}>
-                      <RocketIcon size={24} />
+                      <MemoizedRocketIcon size={24} />
                     </div>
                   </div>
                 )}
@@ -617,21 +579,7 @@ export default function App() {
               </div>
               <Keyboard
                 colorings={colorings.keyboardColorings}
-                onKeyPress={(letter) => {
-                  if (letter === "b") {
-                    setInputValue((old) => old.slice(0, -1));
-                  } else {
-                    setInputValue((old) => {
-                      return old.length < 5 ? old + letter : old;
-                    });
-                    if (inputValue.length === 4) {
-                      makeAttempt(inputValue + letter, answer, attempts);
-                    }
-                    if (inputValue.length === 5) {
-                      makeAttempt(inputValue, answer, attempts);
-                    }
-                  }
-                }}
+                onKeyPress={keyboardOnKeyPress}
               />
             </div>
           )}
@@ -640,8 +588,8 @@ export default function App() {
 
       <PaymentModal
         visible={showPremiumModal}
-        dismiss={() => setShowPremiumModal(false)}
-        onSuccess={() => setIsPremium(true)}
+        dismiss={paymentModalOnDismiss}
+        onSuccess={paymentModalOnSuccess}
       />
     </div>
   );

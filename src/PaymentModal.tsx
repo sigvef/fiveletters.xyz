@@ -1,5 +1,5 @@
 import { CheckCircleFillIcon, RocketIcon, XIcon } from "@primer/octicons-react";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { verifyLicense } from "./api";
 import { Button } from "./Button";
 import { borderRadius, colors, containerMaxWidth } from "./colors";
@@ -8,7 +8,7 @@ export const PaymentModal: React.FC<{
   visible: boolean;
   dismiss: () => void;
   onSuccess: () => void;
-}> = ({ visible, dismiss, onSuccess }) => {
+}> = memo(({ visible, dismiss, onSuccess }) => {
   const [showPaymentSuccess, setShowPaymentSuccess] = useState<
     boolean | "unlocked-from-code"
   >(false);
@@ -255,6 +255,10 @@ export const PaymentModal: React.FC<{
                             if (value) {
                               onSuccess();
                               setShowPaymentSuccess("unlocked-from-code");
+                              localStorage.setItem(
+                                "fiveletters.xyz:license_key",
+                                license_key
+                              );
                             } else {
                               alert("Invalid license key.");
                             }
@@ -284,4 +288,4 @@ export const PaymentModal: React.FC<{
       </div>
     </div>
   );
-};
+});
