@@ -13,6 +13,7 @@ const colors = {
   extraBlack: "#031514",
   black: "#0c2629",
   dark: "#265353",
+  darkContrastText: "#003c3c",
   green: "#2a9d8f",
   yellow: "#e9c46a",
   lightYellow: "#b5ac97",
@@ -113,7 +114,7 @@ const T: React.FC<{ style?: any; className?: string }> = ({
         flexDirection: "row",
         alignItems: "center",
         fontSize: 22,
-        lineHeight: "1.25",
+        lineHeight: "1.33",
         color: colors.extraBlack,
         ...style,
       }}
@@ -408,9 +409,34 @@ const springAnimation = (() => {
 
 type HelperState = "not-shown-yet" | "show-now" | "never-show-again";
 
+const verifyLicense = (key: string, increase_count?: boolean) =>
+  fetch("https://api.gumroad.com/v2/licenses/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      product_permalink: "yjxbev",
+      license_key: key,
+      increment_uses_count: !!increase_count,
+    }),
+  })
+    .then((response) => response.json())
+    .then((data) => !!data.success);
+
 export default function App() {
-  const [isPremium, setIsPremium] = useState(false);
+  const [isPremium, _setIsPremium] = useState(
+    localStorage.getItem("fiveletters.xyz:cachedIsPremium") === "true"
+  );
+  const setIsPremium = (value: boolean) => {
+    localStorage.setItem(
+      "fiveletters.xyz:cachedIsPremium",
+      JSON.stringify(value)
+    );
+    _setIsPremium(value);
+  };
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showPaymentSuccess, setShowPaymentSuccess] = useState<
+    boolean | "unlocked-from-code"
+  >(false);
   const [containerSize, setContainerSize] = useState({
     width: Math.min(containerMaxWidth, window.innerWidth),
     height: window.innerHeight,
@@ -428,6 +454,11 @@ export default function App() {
   );
 
   useEffect(() => {
+    const key = localStorage.getItem("fiveletters.xyz:license_key");
+    if (key) {
+      verifyLicense(key).then(setIsPremium);
+    }
+
     const handler = () => {
       setContainerSize({
         width: Math.min(containerMaxWidth, window.innerWidth),
@@ -435,7 +466,31 @@ export default function App() {
       });
     };
     window.addEventListener("resize", handler);
-    return () => window.removeEventListener("resize", handler);
+    const messageHandler = (e: any) => {
+      if (!e.isTrusted) {
+        return;
+      }
+      if (e.origin !== "https://app.gumroad.com") {
+        return;
+      }
+      const data = JSON.parse(e.data);
+      if (
+        data.post_message_name === "sale" &&
+        data.success === true &&
+        data.name === "Premium"
+      ) {
+        //@ts-expect-error
+        window.GumroadOverlay?.iframe?.remove();
+        setIsPremium(true);
+        setShowPaymentSuccess(false);
+        localStorage.setItem("fiveletters.xyz:license_key", data.license_key);
+      }
+    };
+    window.addEventListener("message", messageHandler);
+    return () => {
+      window.removeEventListener("resize", handler);
+      window.removeEventListener("message", messageHandler);
+    };
   }, []);
 
   const [showOrangeHelper, setShowOrangeHelper] =
@@ -942,131 +997,240 @@ export default function App() {
                   flexDirection: "column",
                 }}
               >
-                <T
-                  style={{
-                    fontWeight: "bold",
-                    marginBottom: 16,
-                    marginLeft: 38,
-                    paddingRight: 32,
-                  }}
-                >
-                  Five Letters Premium
-                </T>
-                <button
-                  onClick={() => {
-                    setShowPremiumModal(false);
-                  }}
-                  style={{
-                    background: "transparent",
-                    border: 0,
-                    position: "absolute",
-                    top: -8,
-                    right: -8,
-                    color: colors.dark,
-                    padding: 16,
-                    borderRadius: 9999,
-                  }}
-                >
-                  <XIcon size={24} />
-                </button>
-                <T
-                  style={{
-                    marginLeft: 20,
-                    marginBottom: 16,
-                    alignItems: "flex-end",
-                  }}
-                >
-                  <span
-                    style={{
-                      color: colors.dark,
-                      marginBottom: 16,
-                      marginRight: 4,
-                    }}
-                  >
-                    $
-                  </span>
-                  <span style={{ fontSize: 40, fontWeight: "bold" }}>3</span>
-                  <span style={{ color: colors.dark, marginBottom: 6 }}>
-                    /mo
-                  </span>
-                </T>
-                {[
-                  {
-                    text: "Hints & solutions",
-                    sub: "Get extra hints or see the solution if you get stuck.",
-                  },
-                  {
-                    text: "Statistics & breakdowns",
-                    sub: "Detailed analysis of your own games.",
-                  },
-                  { text: "No ads", sub: "Just like the free version!" },
-                  {
-                    text: "Cancel any time",
-                    sub: "I will even refund your current month.",
-                  },
-                ].map((item) => (
+                {showPaymentSuccess ? (
                   <div
                     style={{
                       display: "flex",
-                      alignItems: "flex-start",
-                      marginBottom: 16,
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      paddingTop: 16,
                     }}
                   >
-                    <div style={{ marginTop: 2, color: colors.dark }}>
-                      <CheckCircleFillIcon size={24} />
-                    </div>
+                    <RocketIcon size={64} />
                     <T
                       style={{
-                        marginLeft: 16,
-                        flexDirection: "column",
-                        alignItems: "flex-start",
+                        marginTop: 32,
+                        marginBottom: 32,
+                        fontWeight: "bold",
                       }}
                     >
-                      {item.text}
-                      <span style={{ color: colors.dark, fontSize: 16 }}>
-                        {item.sub}
+                      Premium unlocked!
+                    </T>
+                    <T
+                      style={{
+                        alignSelf: "flex-start",
+                      }}
+                    >
+                      {showPaymentSuccess !== "unlocked-from-code" &&
+                        "A receipt has been sent to your email. "}
+                      Thank you for supporting Five&nbsp;Letters!
+                    </T>
+
+                    <button
+                      onClick={() => {
+                        setShowPremiumModal(false);
+                      }}
+                      style={{
+                        marginTop: 32,
+                        borderRadius: 999,
+                        alignSelf: "center",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        display: "flex",
+                        cursor: "pointer",
+                        color: colors.light,
+                        textDecoration: "none",
+                        boxShadow: "0px 2px 4px " + colors.dark + "88",
+                        border: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          paddingLeft: 32,
+                          paddingRight: 32,
+                          paddingTop: 16,
+                          paddingBottom: 16,
+                          borderRadius: 999,
+                          backgroundColor: colors.extraBlack,
+                          alignSelf: "center",
+                          display: "flex",
+                        }}
+                      >
+                        <T style={{ color: colors.light }}>Resume game</T>
+                      </div>
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <T
+                      style={{
+                        fontWeight: "bold",
+                        marginBottom: 16,
+                        marginLeft: 38,
+                        paddingRight: 32,
+                      }}
+                    >
+                      Five Letters Premium
+                    </T>
+                    <button
+                      onClick={() => {
+                        setShowPremiumModal(false);
+                      }}
+                      style={{
+                        background: "transparent",
+                        border: 0,
+                        position: "absolute",
+                        top: -8,
+                        right: -8,
+                        color: colors.dark,
+                        padding: 16,
+                        borderRadius: 9999,
+                      }}
+                    >
+                      <XIcon size={24} />
+                    </button>
+
+                    <T
+                      style={{
+                        marginLeft: 20,
+                        marginBottom: 16,
+                        alignItems: "flex-end",
+                      }}
+                    >
+                      <span
+                        style={{
+                          color: colors.darkContrastText,
+                          marginBottom: 16,
+                          marginRight: 4,
+                        }}
+                      >
+                        $
+                      </span>
+                      <span style={{ fontSize: 40, fontWeight: "bold" }}>
+                        3
+                      </span>
+                      <span
+                        style={{
+                          marginLeft: 4,
+                          color: colors.darkContrastText,
+                          marginBottom: 6,
+                        }}
+                      >
+                        / mo
                       </span>
                     </T>
-                  </div>
-                ))}
+                    {[
+                      {
+                        text: "Hints & solutions",
+                        sub: "Get extra hints or see the solution if you get stuck.",
+                      },
+                      {
+                        text: "Statistics & breakdowns",
+                        sub: "Detailed analysis of your own games. (Coming soon!)",
+                      },
+                      { text: "No ads", sub: "Just like the free version!" },
+                      {
+                        text: "Cancel any time",
+                        sub: "",
+                      },
+                    ].map((item) => (
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          marginBottom: 16,
+                        }}
+                      >
+                        <div style={{ marginTop: 2, color: colors.dark }}>
+                          <CheckCircleFillIcon size={24} />
+                        </div>
+                        <T
+                          style={{
+                            marginLeft: 16,
+                            flexDirection: "column",
+                            alignItems: "flex-start",
+                          }}
+                        >
+                          {item.text}
+                          <span
+                            style={{
+                              color: colors.darkContrastText,
+                              fontSize: 16,
+                            }}
+                          >
+                            {item.sub}
+                          </span>
+                        </T>
+                      </div>
+                    ))}
 
-                {/*href="https://fiveletters.gumroad.com/l/yjxbev?wanted=true"*/}
-                {/*data-gumroad-single-product="true"*/}
-                <a
-                  style={{
-                    marginTop: 16,
-                    borderRadius: 999,
-                    alignSelf: "center",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    display: "flex",
-                    cursor: "pointer",
-                    color: colors.light,
-                    textDecoration: "none",
-                    boxShadow: "0px 2px 4px " + colors.dark + "88",
-                  }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    alert("You have unlocked a free trial!");
-                    setIsPremium(true);
-                    setShowPremiumModal(false);
-                  }}
-                >
-                  <div
-                    style={{
-                      paddingLeft: 32,
-                      paddingRight: 32,
-                      paddingTop: 16,
-                      paddingBottom: 16,
-                      borderRadius: 999,
-                      backgroundColor: colors.extraBlack,
-                      alignSelf: "center",
-                      display: "flex",
-                    }}
-                  >
-                    <T style={{ color: colors.light }}>Get Premium</T>
-                  </div>
-                </a>
+                    <a
+                      href="https://fiveletters.gumroad.com/l/yjxbev?wanted=true"
+                      data-gumroad-single-product="true"
+                      style={{
+                        marginTop: 16,
+                        borderRadius: 999,
+                        alignSelf: "center",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        display: "flex",
+                        cursor: "pointer",
+                        color: colors.light,
+                        textDecoration: "none",
+                        boxShadow: "0px 2px 4px " + colors.dark + "88",
+                      }}
+                    >
+                      <div
+                        style={{
+                          paddingLeft: 32,
+                          paddingRight: 32,
+                          paddingTop: 16,
+                          paddingBottom: 16,
+                          borderRadius: 999,
+                          backgroundColor: colors.extraBlack,
+                          alignSelf: "center",
+                          display: "flex",
+                        }}
+                      >
+                        <T style={{ color: colors.light }}>Get Premium</T>
+                      </div>
+                    </a>
+                    <T style={{ fontSize: 16 }}>
+                      <button
+                        onClick={() => {
+                          const license_key =
+                            prompt(
+                              "Paste the license key from your subscription email here:"
+                            ) || "";
+                          if (license_key) {
+                            verifyLicense(license_key, true).then((value) => {
+                              if (value) {
+                                setIsPremium(true);
+                                setShowPaymentSuccess("unlocked-from-code");
+                              } else {
+                                alert("Invalid license key.");
+                              }
+                            });
+                          }
+                        }}
+                        style={{
+                          cursor: "pointer",
+                          border: 0,
+                          textDecoration: "underline",
+                          outline: 0,
+                          alignSelf: "center",
+                          margin: "16px auto 0",
+                          background: "transparent",
+                          fontSize: 16,
+                          color: colors.black,
+                        }}
+                      >
+                        ...or redeem an existing code
+                      </button>
+                    </T>
+                  </>
+                )}
               </div>
             </div>
           </div>
