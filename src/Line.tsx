@@ -1,6 +1,7 @@
-import { forwardRef, memo } from "react";
+import { forwardRef, memo, useEffect, useRef } from "react";
 import { backgroundColors, borderRadius, foregroundColors } from "./colors";
 import { Coloring } from "./game";
+import { startAnimation } from "./utils";
 
 export const Line: React.FC<{
   word: string;
@@ -11,6 +12,32 @@ export const Line: React.FC<{
   forwardRef((props, ref) => {
     const { word, coloring, letterHints, letterBoxSize } = props;
     const size = letterBoxSize;
+
+    const id = useRef(() => Math.random());
+    const boxRef0 = useRef();
+    const boxRef1 = useRef();
+    const boxRef2 = useRef();
+    const boxRef3 = useRef();
+    const boxRef4 = useRef();
+    const refs = [boxRef0, boxRef1, boxRef2, boxRef3, boxRef4];
+
+    useEffect(() => {
+      const index = [...word].findIndex((x) => x === " ") - 1;
+      const ref = refs[index];
+      if (ref?.current) {
+        startAnimation(`${id.current}-${index}`, {
+          value: 0,
+          speed: 1,
+          friction: 0.9,
+          springiness: 0.8,
+          properties: {
+            transform: (value) => `scale(${1 - value * 0.035})`,
+          },
+          element: ref.current,
+        });
+      }
+    }, [word]);
+
     return (
       <div
         //@ts-expect-error
@@ -26,6 +53,8 @@ export const Line: React.FC<{
           return (
             <div
               key={i}
+              //@ts-expect-error
+              ref={refs[i]}
               style={{
                 display: "flex",
                 width: size,

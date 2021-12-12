@@ -115,7 +115,6 @@ export default function App() {
 
   const makeAttempt = useCallback(
     (attempt: string, answer: string, attempts: string[]) => {
-      console.log("make attempt", attempt, answer, attempts);
       if (allWordsSet.has(attempt.toUpperCase())) {
         if (attempts.length === 2) {
           setHasNotMadeAnyAttemptYet(false);
