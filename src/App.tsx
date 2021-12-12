@@ -133,7 +133,7 @@ export default function App() {
         game_id: gameId.current,
       });
       if (isValidAttempt) {
-        if (attempts.length === 2) {
+        if (attempts.length === 1) {
           setHasNotMadeAnyAttemptYet(false);
         }
 
