@@ -694,19 +694,6 @@ export default function App() {
               <div
                 style={{
                   marginBottom: 16,
-                  /*
-                  transform: [
-                    {
-                      translateX: Animated.multiply(
-                        2,
-                        shakeValue.interpolate({
-                          inputRange: springAnimation.inputRange,
-                          outputRange: springAnimation.outputRange,
-                        })
-                      ),
-                    },
-                  ],
-                   */
                 }}
               >
                 <Line
