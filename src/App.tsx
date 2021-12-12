@@ -439,11 +439,21 @@ export default function App() {
 
   const setShowPremiumModal = (value) => {
     _setShowPremiumModal(value);
-    if (!hasBootstrappedGumroad) {
+    if (value && !hasBootstrappedGumroad) {
       hasBootstrappedGumroad = true;
       const script = document.createElement("script");
       script.src = "https://gumroad.com/js/gumroad.js";
+      script.async = true;
       document.body.appendChild(script);
+      const loop = () => {
+        try {
+          //@ts-expect-error
+          createGumroadOverlay();
+        } catch (e) {
+          setTimeout(loop, 50);
+        }
+      };
+      loop();
     }
   };
 
