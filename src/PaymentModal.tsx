@@ -4,6 +4,7 @@ import { verifyLicense } from "./api";
 import { Button } from "./Button";
 import { borderRadius, colors, containerMaxWidth } from "./colors";
 import { Modal } from "./Modal";
+import { isSuperTinyMobileScreen } from "./utils";
 
 export const PaymentModal: React.FC<{
   visible: boolean;
@@ -92,8 +93,7 @@ export const PaymentModal: React.FC<{
               style={{
                 fontWeight: "bold",
                 marginBottom: 16,
-                marginLeft: 38,
-                paddingRight: 32,
+                paddingRight: 16,
               }}
             >
               Five Letters Premium
@@ -119,9 +119,18 @@ export const PaymentModal: React.FC<{
 
             <div
               style={{
-                marginLeft: 20,
                 marginBottom: 16,
                 alignItems: "flex-end",
+                textAlign: "center",
+                padding: 8,
+                background: "#ffffff22",
+                marginLeft: isSuperTinyMobileScreen(window.innerHeight)
+                  ? -16
+                  : -32,
+                marginRight: isSuperTinyMobileScreen(window.innerHeight)
+                  ? -16
+                  : -32,
+                color: colors.black,
               }}
             >
               <span
@@ -133,12 +142,20 @@ export const PaymentModal: React.FC<{
               >
                 $
               </span>
-              <span style={{ fontSize: 40, fontWeight: "bold" }}>3</span>
+              <span
+                style={{
+                  fontSize: 40,
+                  fontWeight: "bold",
+                  color: colors.extraBlack,
+                }}
+              >
+                3
+              </span>
               <span
                 style={{
                   marginLeft: 4,
-                  color: colors.darkContrastText,
                   marginBottom: 6,
+                  color: colors.darkContrastText,
                 }}
               >
                 / mo
@@ -151,7 +168,7 @@ export const PaymentModal: React.FC<{
               },
               {
                 text: "Statistics & breakdowns",
-                sub: "Detailed analysis of your own games. (Coming soon!)",
+                sub: "Detailed analysis of your own games.",
               },
               { text: "No ads", sub: "Just like the free version!" },
               {

@@ -1,5 +1,6 @@
 import { memo } from "react";
 import { borderRadius, colors, containerMaxWidth } from "./colors";
+import { isSuperTinyMobileScreen } from "./utils";
 
 export const Modal: React.FC<{
   visible: boolean;
@@ -39,14 +40,14 @@ export const Modal: React.FC<{
         style={{
           maxWidth: containerMaxWidth,
           margin: "0 auto",
-          padding: 16,
+          padding: isSuperTinyMobileScreen(window.innerHeight) ? 8 : 16,
         }}
       >
         <div
           style={{
             background: colors.light,
             borderRadius,
-            padding: 32,
+            padding: isSuperTinyMobileScreen(window.innerHeight) ? 16 : 32,
             display: "flex",
             flexDirection: "column",
             position: "relative",
