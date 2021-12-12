@@ -206,8 +206,9 @@ export const PaymentModal: React.FC<{
                       text: "Cancel any time",
                       sub: "",
                     },
-                  ].map((item) => (
+                  ].map((item, i) => (
                     <div
+                      key={i}
                       style={{
                         display: "flex",
                         alignItems: "flex-start",

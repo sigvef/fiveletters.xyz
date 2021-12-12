@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { allWords } from "./allwords";
 import { Coloring, getAllColorings, HelperState } from "./game";
 import { words } from "./words";
@@ -16,6 +22,8 @@ import { verifyLicense } from "./api";
 import { PaymentModal } from "./PaymentModal";
 import { MemoizedRocketIcon } from "./icons";
 import { Line } from "./Line";
+
+const allOutlineArray = [...new Array(5)].map(() => "outline" as const);
 
 const allWordsSet = new Set(allWords);
 
@@ -105,62 +113,70 @@ export default function App() {
   const [hints, setHints] = useState<number[]>([]);
   const inputValueRef = useRef("");
 
-  const makeAttempt = (attempt: string, answer: string, attempts: string[]) => {
-    if (allWordsSet.has(attempt.toUpperCase())) {
-      if (attempts.length === 2) {
-        setHasNotMadeAnyAttemptYet(false);
-      }
+  const makeAttempt = useCallback(
+    (attempt: string, answer: string, attempts: string[]) => {
+      console.log("make attempt", attempt, answer, attempts);
+      if (allWordsSet.has(attempt.toUpperCase())) {
+        if (attempts.length === 2) {
+          setHasNotMadeAnyAttemptYet(false);
+        }
 
-      const colorings = getAllColorings(answer, [...attempts, attempt], hints);
-      const latest =
-        colorings.attemptColorings[colorings.attemptColorings.length - 1];
+        const colorings = getAllColorings(
+          answer,
+          [...attempts, attempt],
+          hints
+        );
+        const latest =
+          colorings.attemptColorings[colorings.attemptColorings.length - 1];
 
-      setShowGreenHelper((old) => {
-        if (old === "never-show-again") {
+        setShowGreenHelper((old) => {
+          if (old === "never-show-again") {
+            return old;
+          }
+          if (old === "show-now") {
+            return "never-show-again";
+          }
+          if (latest.indexOf("correct") !== -1) {
+            return "show-now";
+          }
           return old;
-        }
-        if (old === "show-now") {
-          return "never-show-again";
-        }
-        if (latest.indexOf("correct") !== -1) {
-          return "show-now";
-        }
-        return old;
-      });
-      setShowOrangeHelper((old) => {
-        if (old === "never-show-again") {
-          return old;
-        }
-        if (old === "show-now") {
-          return "never-show-again";
-        }
-        if (latest.indexOf("semi-correct") !== -1) {
-          return "show-now";
-        }
-        return old;
-      });
-      inputValueRef.current = "";
-      setAttempts((old) => [...old, attempt]);
-      if (attempt === answer) {
-        setGameState("win");
-      } else if (attempts.length + 1 === maxAttempts) {
-        setGameState("lose");
-      }
-    } else {
-      if (inputLineRef.current) {
-        startAnimation("inputline-shake", {
-          value: 0,
-          speed: 3,
-          springiness: 0.9,
-          friction: 0.92,
-          properties: {
-            transform: (value) => `translateX(${value}px)`,
-          },
-          element: inputLineRef.current,
         });
+        setShowOrangeHelper((old) => {
+          if (old === "never-show-again") {
+            return old;
+          }
+          if (old === "show-now") {
+            return "never-show-again";
+          }
+          if (latest.indexOf("semi-correct") !== -1) {
+            return "show-now";
+          }
+          return old;
+        });
+        inputValueRef.current = "";
+        setAttempts((old) => [...old, attempt]);
+        if (attempt === answer) {
+          setGameState("win");
+        } else if (attempts.length + 1 === maxAttempts) {
+          setGameState("lose");
+        }
+      } else {
+        if (inputLineRef.current) {
+          startAnimation("inputline-shake", {
+            value: 0,
+            speed: 3,
+            springiness: 0.9,
+            friction: 0.92,
+            properties: {
+              transform: (value) => `translateX(${value}px)`,
+            },
+            element: inputLineRef.current,
+          });
+        }
       }
-    }
-  };
+    },
+    []
+  );
 
   const playAgainButton = (
     <Button
@@ -199,18 +215,21 @@ export default function App() {
     []
   );
   const paymentModalOnSuccess = React.useCallback(() => setIsPremium(true), []);
-  const keyboardOnKeyPress = React.useCallback((letter: string) => {
-    if (letter === "b") {
-      inputValueRef.current = inputValueRef.current.slice(0, -1);
-      forceRefresh();
-    } else {
-      inputValueRef.current = (inputValueRef.current + letter).slice(0, 5);
-      forceRefresh();
-      if (inputValueRef.current.length === 5) {
-        makeAttempt(inputValueRef.current, answer, attempts);
+  const keyboardOnKeyPress = React.useCallback(
+    (letter: string) => {
+      if (letter === "b") {
+        inputValueRef.current = inputValueRef.current.slice(0, -1);
+        forceRefresh();
+      } else {
+        inputValueRef.current = (inputValueRef.current + letter).slice(0, 5);
+        forceRefresh();
+        if (inputValueRef.current.length === 5) {
+          makeAttempt(inputValueRef.current, answer, attempts);
+        }
       }
-    }
-  }, []);
+    },
+    [makeAttempt, answer, attempts]
+  );
   return (
     <div
       style={{
@@ -295,9 +314,7 @@ export default function App() {
                   <div key={i} style={{ marginBottom: 8 }}>
                     <Line
                       word={"     "}
-                      coloring={[...new Array(answer.length)].map(
-                        () => "outline"
-                      )}
+                      coloring={allOutlineArray}
                       letterBoxSize={letterBoxSize}
                     />
                   </div>
