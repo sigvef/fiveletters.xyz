@@ -8,6 +8,11 @@ export type Colorings = { [key: string]: Coloring };
 
 export type HelperState = "not-shown-yet" | "show-now" | "never-show-again";
 
+export const generateGameId = () =>
+  [...new Array(24)]
+    .map(() => ((Math.random() * 0xffffffff) | 0).toString(16).padStart(8, "0"))
+    .join("-");
+
 export function getAllColorings(
   answer: string,
   attempts: string[],

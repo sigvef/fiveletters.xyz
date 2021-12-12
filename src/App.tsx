@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 import { allWords } from "./allwords";
-import { Coloring, getAllColorings, HelperState } from "./game";
+import { Coloring, generateGameId, getAllColorings, HelperState } from "./game";
 import { words } from "./words";
 import {
   backgroundColors,
@@ -22,6 +22,9 @@ import { verifyLicense } from "./api";
 import { PaymentModal } from "./PaymentModal";
 import { MemoizedRocketIcon } from "./icons";
 import { Line } from "./Line";
+import { storeAttempt } from "./db";
+import { Stats } from "./Stats";
+import { Modal } from "./Modal";
 
 const allOutlineArray = [...new Array(5)].map(() => "outline" as const);
 
@@ -47,6 +50,7 @@ export default function App() {
     _setIsPremium(value);
   };
   const [showPremiumModal, _setShowPremiumModal] = useState(false);
+  const [showStatsModal, setShowStatsModal] = useState(false);
 
   const setShowPremiumModal = (value: boolean) => {
     _setShowPremiumModal(value);
@@ -103,6 +107,11 @@ export default function App() {
     };
   }, []);
 
+  const gameId = useRef("");
+  if (!gameId.current) {
+    gameId.current = generateGameId();
+  }
+
   const [showOrangeHelper, setShowOrangeHelper] =
     useState<HelperState>("not-shown-yet");
   const [showGreenHelper, setShowGreenHelper] =
@@ -115,7 +124,15 @@ export default function App() {
 
   const makeAttempt = useCallback(
     (attempt: string, answer: string, attempts: string[]) => {
-      if (allWordsSet.has(attempt.toUpperCase())) {
+      const isValidAttempt = allWordsSet.has(attempt.toUpperCase());
+      storeAttempt({
+        attempt,
+        answer,
+        step: attempts.length + 1,
+        is_valid_attempt: isValidAttempt,
+        game_id: gameId.current,
+      });
+      if (isValidAttempt) {
         if (attempts.length === 2) {
           setHasNotMadeAnyAttemptYet(false);
         }
@@ -181,6 +198,7 @@ export default function App() {
     <Button
       onClick={() => {
         setGameState("play");
+        gameId.current = generateGameId();
         setAttempts([]);
         setHints([]);
         const newAnswer = words[(Math.random() * words.length) | 0];
@@ -411,6 +429,20 @@ export default function App() {
                     You win!
                   </div>
                   {playAgainButton}
+
+                  <a
+                    href="#"
+                    style={{ color: colors.black, marginTop: 32 }}
+                    onClick={(e) => {
+                      if (!isPremium) {
+                        setShowPremiumModal(true);
+                      } else {
+                        setShowStatsModal(true);
+                      }
+                    }}
+                  >
+                    View stats
+                  </a>
                 </div>
               )}
 
@@ -601,6 +633,10 @@ export default function App() {
           )}
         </div>
       </div>
+
+      <Modal visible={showStatsModal} dismiss={() => setShowStatsModal(false)}>
+        <Stats visible={showStatsModal} />
+      </Modal>
 
       <PaymentModal
         visible={showPremiumModal}
