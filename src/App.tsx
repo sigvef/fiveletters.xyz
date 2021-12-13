@@ -840,6 +840,6 @@ const styles = {
     overflow: "hidden",
     backgroundColor: colors.dark,
     boxShadow: "0px 0px 32px " + colors.extraBlack + "88",
-    position: "relative",
+    position: "relative" as const,
   },
 };
