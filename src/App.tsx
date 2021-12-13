@@ -23,6 +23,7 @@ import { Line } from "./Line";
 import { storeAttempt } from "./db";
 import { Stats } from "./Stats";
 import { Modal } from "./Modal";
+import { InfoIcon } from "@primer/octicons-react";
 
 const allOutlineArray = [...new Array(5)].map(() => "outline" as const);
 
@@ -439,6 +440,26 @@ export default function App() {
                   >
                     Guess the word.
                   </div>
+                )}
+
+              {gameState === "play" &&
+                isFirstGame &&
+                remainingAttempts === maxAttempts &&
+                inputValueRef.current.length === 5 && (
+                  <>
+                    <div
+                      style={{
+                        justifyContent: "center",
+                      }}
+                    >
+                      You must guess an existing English
+                      five&nbsp;letter&nbsp;word.
+                    </div>
+                    <div>
+                      To get started, try entering{" "}
+                      {words[(Math.random() * words.length) | 0]}.
+                    </div>
+                  </>
                 )}
 
               <div style={{ flex: 1 }} />
