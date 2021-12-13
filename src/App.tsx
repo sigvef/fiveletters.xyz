@@ -382,7 +382,7 @@ export default function App() {
                         )
                           ? 8
                           : 16,
-                        color: colors.light,
+                        color: colors.green,
                         display: "flex",
                         alignItems: "center",
                       }}
@@ -407,7 +407,7 @@ export default function App() {
                         )
                           ? 8
                           : 16,
-                        color: colors.lightYellow,
+                        color: colors.yellow,
                         display: "flex",
                         alignItems: "center",
                       }}

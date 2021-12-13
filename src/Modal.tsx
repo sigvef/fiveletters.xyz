@@ -45,7 +45,7 @@ export const Modal: React.FC<{
       >
         <div
           style={{
-            background: colors.light,
+            background: colors.modalBg,
             borderRadius,
             padding: isSuperTinyMobileScreen(window.innerHeight) ? 16 : 32,
             display: "flex",

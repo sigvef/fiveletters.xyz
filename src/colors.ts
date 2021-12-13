@@ -4,20 +4,20 @@ export const containerMaxWidth = 560;
 export const colors = {
   extraBlack: "#031514",
   black: "#0c2629",
-  dark: "#265353",
+  dark: "#006e64",
   darkContrastText: "#003c3c",
-  green: "#2a9d8f",
+  green: "#13dbbc",
   yellow: "#e9c46a",
-  lightYellow: "#b5ac97",
-  light: "#6ea7a5",
-  lightBg: "#446968",
+  lightYellow: "#e3dcce",
+  light: "#9debe0",
   white: "white",
   red: "#e76f51",
+  modalBg: "#549992",
 };
 
 export const backgroundColors = {
   outline: "transparent",
-  unknown: "#f5f5f522",
+  unknown: "#ddd3",
   "semi-correct": colors.yellow,
   correct: colors.green,
   wrong: colors.black,
@@ -28,5 +28,5 @@ export const foregroundColors = {
   unknown: colors.extraBlack,
   "semi-correct": colors.extraBlack,
   correct: colors.extraBlack,
-  wrong: colors.dark,
+  wrong: "#64918a",
 };

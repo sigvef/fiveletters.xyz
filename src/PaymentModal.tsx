@@ -108,7 +108,7 @@ export const PaymentModal: React.FC<{
                 position: "absolute",
                 top: -8,
                 right: -8,
-                color: colors.dark,
+                color: colors.black,
                 padding: 16,
                 borderRadius: 9999,
                 cursor: "pointer",
@@ -130,7 +130,6 @@ export const PaymentModal: React.FC<{
                 marginRight: isSuperTinyMobileScreen(window.innerHeight)
                   ? -16
                   : -32,
-                color: colors.black,
               }}
             >
               <span
@@ -184,7 +183,7 @@ export const PaymentModal: React.FC<{
                   marginBottom: 16,
                 }}
               >
-                <div style={{ color: colors.dark }}>
+                <div style={{ color: colors.darkContrastText }}>
                   <CheckCircleFillIcon size={24} />
                 </div>
                 <div
