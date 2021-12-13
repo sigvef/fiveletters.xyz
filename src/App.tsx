@@ -23,7 +23,7 @@ import { Line } from "./Line";
 import { storeAttempt } from "./db";
 import { Stats } from "./Stats";
 import { Modal } from "./Modal";
-import { InfoIcon } from "@primer/octicons-react";
+import { InfoIcon, XIcon } from "@primer/octicons-react";
 
 const allOutlineArray = [...new Array(5)].map(() => "outline" as const);
 
@@ -50,6 +50,7 @@ export default function App() {
   };
   const [showPremiumModal, _setShowPremiumModal] = useState(false);
   const [showStatsModal, setShowStatsModal] = useState(false);
+  const [showAboutModal, setShowAboutModal] = useState(false);
   const [isFirstGame, setIsFirstGame] = useState(true);
 
   const setShowPremiumModal = (value: boolean) => {
@@ -271,6 +272,29 @@ export default function App() {
         }}
       >
         <div style={styles.container}>
+          <a
+            className="animate-all"
+            href="#"
+            style={{
+              color: colors.black,
+              position: "absolute",
+              top: 16,
+              right: 16,
+              opacity: hasNotMadeAnyAttemptYet ? 1 : 0,
+              pointerEvents:
+                isFirstGame && hasNotMadeAnyAttemptYet ? "all" : "none",
+              transform:
+                isFirstGame && hasNotMadeAnyAttemptYet
+                  ? "translateY(0px)"
+                  : "translateY(-32px)",
+            }}
+            onClick={(e) => {
+              e.preventDefault();
+              setShowAboutModal(true);
+            }}
+          >
+            About
+          </a>
           <div
             className="animate-all"
             style={{
@@ -728,6 +752,69 @@ export default function App() {
         <Stats visible={showStatsModal} />
       </Modal>
 
+      <Modal visible={showAboutModal} dismiss={() => setShowAboutModal(false)}>
+        <>
+          <button
+            onClick={() => {
+              setShowAboutModal(false);
+            }}
+            style={{
+              background: "transparent",
+              border: 0,
+              position: "absolute",
+              top: -8,
+              right: -8,
+              color: colors.black,
+              padding: 16,
+              borderRadius: 9999,
+              cursor: "pointer",
+            }}
+          >
+            <XIcon size={24} />
+          </button>
+
+          <div style={{ marginBottom: 16, paddingRight: 8 }}>
+            <strong>Five Letters</strong> is a weekend technology experiment.
+            The idea was to test if it was possible to sell subscriptions to a
+            frontend web app with no backend, only a store provider. Turns out,
+            it works!{" "}
+          </div>
+          <div style={{ marginBottom: 16, paddingRight: 8 }}>
+            <a
+              href="https://fiveletters.gumroad.com/l/five-letters-premium"
+              style={{ color: colors.black }}
+            >
+              Gumroad.com
+            </a>{" "}
+            is used for subscription management.
+          </div>
+          <div style={{ paddingRight: 8 }}>
+            The game concept itself is a cross between{" "}
+            <a
+              href="https://en.wikipedia.org/wiki/Mastermind_(board_game)"
+              style={{ color: colors.black }}
+            >
+              Mastermind
+            </a>{" "}
+            and classic word guessing games. Similar games include{" "}
+            <a
+              href="https://en.wikipedia.org/wiki/Lingo_(American_game_show)"
+              style={{ color: colors.black }}
+            >
+              Lingo (game show)
+            </a>{" "}
+            and{" "}
+            <a
+              href="https://www.powerlanguage.co.uk/wordle/"
+              style={{ color: colors.black }}
+            >
+              Wordle
+            </a>
+            .
+          </div>
+        </>
+      </Modal>
+
       <PaymentModal
         visible={showPremiumModal}
         dismiss={paymentModalOnDismiss}
@@ -753,5 +840,6 @@ const styles = {
     overflow: "hidden",
     backgroundColor: colors.dark,
     boxShadow: "0px 0px 32px " + colors.extraBlack + "88",
+    position: "relative",
   },
 };
