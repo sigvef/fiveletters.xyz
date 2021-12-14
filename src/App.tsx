@@ -489,7 +489,8 @@ export default function App() {
 
               {gameState === "play" &&
                 isFirstGame &&
-                remainingAttempts === maxAttempts && (
+                remainingAttempts === maxAttempts &&
+                inputValueRef.current.length !== 5 && (
                   <div
                     style={{
                       marginTop: 32,
@@ -508,15 +509,23 @@ export default function App() {
                   <>
                     <div
                       style={{
+                        marginTop: 32,
                         justifyContent: "center",
+                        marginBottom: 16,
                       }}
                     >
                       You must guess an existing English
                       five&nbsp;letter&nbsp;word.
                     </div>
                     <div>
-                      To get started, try entering{" "}
-                      {words[(Math.random() * words.length) | 0]}.
+                      To get started, try{" "}
+                      <span
+                        style={{
+                          color: colors.yellow,
+                        }}
+                      >
+                        {words[(Math.random() * words.length) | 0]}
+                      </span>
                     </div>
                   </>
                 )}
