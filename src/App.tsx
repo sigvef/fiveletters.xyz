@@ -53,7 +53,10 @@ export default function App() {
   const [showStatsModal, setShowStatsModal] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [isFirstGame, setIsFirstGame] = useState(true);
-  const [defineHint, setDefineHint] = useState<undefined | null | string>(null);
+  const [defineHint, setDefineHint] = useState({
+    shouldShowModal: false,
+    value: "",
+  });
 
   const setShowPremiumModal = (value: boolean) => {
     _setShowPremiumModal(value);
@@ -678,20 +681,13 @@ export default function App() {
                       )
                         .then((response) => response.json())
                         .then((data) =>
-                          setDefineHint(
-                            data[0]?.meanings[0]?.definitions[0]?.definition ||
-                              "unknown."
-                          )
+                          setDefineHint({
+                            shouldShowModal: true,
+                            value:
+                              data[0]?.meanings[0]?.definitions[0]
+                                ?.definition || "unknown.",
+                          })
                         );
-                      return;
-                      const hintableIndexes = colorings.deduced
-                        .map((x, i) => (x ? -1 : i))
-                        .filter((x) => x > -1);
-                      const hintIndex =
-                        hintableIndexes[
-                          (Math.random() * hintableIndexes.length) | 0
-                        ];
-                      setHints((old) => [...old, hintIndex]);
                     }}
                   >
                     Hint
@@ -793,22 +789,27 @@ export default function App() {
         </>
       </Modal>
 
-      {defineHint !== null && (
-        <Modal visible={true} dismiss={() => setDefineHint(null)}>
-          <div style={{ fontWeight: "bold", marginBottom: 16 }}>
-            The solution is...
-          </div>
-          <div style={{ marginBottom: 16, fontSize: 18 }}>...{defineHint}</div>
-          <Button
-            onClick={(e) => {
-              e.preventDefault();
-              setDefineHint(null);
-            }}
-          >
-            OK
-          </Button>
-        </Modal>
-      )}
+      <Modal
+        visible={defineHint.shouldShowModal}
+        dismiss={() =>
+          setDefineHint((old) => ({ ...old, shouldShowModal: false }))
+        }
+      >
+        <div style={{ fontWeight: "bold", marginBottom: 16 }}>
+          The solution is...
+        </div>
+        <div style={{ marginBottom: 16, fontSize: 18 }}>
+          ...{defineHint.value}
+        </div>
+        <Button
+          onClick={(e) => {
+            e.preventDefault();
+            setDefineHint((old) => ({ ...old, shouldShowModal: false }));
+          }}
+        >
+          OK
+        </Button>
+      </Modal>
 
       <PaymentModal
         visible={showPremiumModal}
