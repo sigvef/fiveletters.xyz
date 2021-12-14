@@ -24,6 +24,8 @@ import { storeAttempt } from "./db";
 import { Stats } from "./Stats";
 import { Modal } from "./Modal";
 
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const allOutlineArray = [...new Array(5)].map(() => "outline" as const);
 
 const allWordsSet = new Set(allWords);
@@ -121,11 +123,21 @@ export default function App() {
   const [hasNotMadeAnyAttemptYet, setHasNotMadeAnyAttemptYet] = useState(true);
 
   const [attempts, setAttempts] = useState<string[]>([]);
+  const [definition, setDefinition] = useState({
+    isLoading: false,
+    value: "",
+    word: "",
+  });
   const [hints, setHints] = useState<number[]>([]);
   const inputValueRef = useRef("");
 
   const makeAttempt = useCallback(
-    (attempt: string, answer: string, attempts: string[]) => {
+    (
+      attempt: string,
+      answer: string,
+      attempts: string[],
+      isSolutionWord: boolean
+    ) => {
       const isValidAttempt = allWordsSet.has(attempt.toUpperCase());
       storeAttempt({
         attempt,
@@ -133,8 +145,26 @@ export default function App() {
         step: attempts.length + 1,
         is_valid_attempt: isValidAttempt,
         game_id: gameId.current,
+        is_solution_word: !!isSolutionWord,
       });
       if (isValidAttempt) {
+        const word = attempt.toLowerCase();
+        setDefinition((old) => ({ ...old, isLoading: true }));
+        Promise.all([
+          delay(1000),
+          fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + word).then(
+            (response) => response.json()
+          ),
+        ]).then(([, data]) => {
+          setDefinition({
+            isLoading: false,
+            word,
+            value: capitalizeFirst(
+              data[0]?.meanings[0]?.definitions[0]?.definition || "unknown."
+            ),
+          });
+        });
+
         if (attempts.length === 1) {
           setHasNotMadeAnyAttemptYet(false);
         }
@@ -213,7 +243,7 @@ export default function App() {
           }, 300 + i * 75);
         }
         setTimeout(() => {
-          makeAttempt(answer, newAnswer, []);
+          makeAttempt(answer, newAnswer, [], true);
         }, 300 + answer.length * 75);
       }}
       buttonColor={colors.green}
@@ -244,7 +274,7 @@ export default function App() {
         inputValueRef.current = (inputValueRef.current + letter).slice(0, 5);
         forceRefresh();
         if (inputValueRef.current.length === 5) {
-          makeAttempt(inputValueRef.current, answer, attempts);
+          makeAttempt(inputValueRef.current, answer, attempts, false);
         }
       }
     },
@@ -485,6 +515,34 @@ export default function App() {
                   </>
                 )}
 
+              {gameState === "play" ? (
+                <div
+                  className="animate-all"
+                  style={{
+                    marginTop: 16,
+                    opacity: definition.isLoading ? 0 : 1,
+                    paddingRight: 16,
+                    fontSize: 16,
+                    transform: definition.isLoading
+                      ? "translateY(8px)"
+                      : "translateY(0px)",
+                  }}
+                >
+                  <div style={{ marginBottom: 4 }}>
+                    {definition.word.toUpperCase()}
+                  </div>
+                  <div
+                    style={{
+                      fontStyle: "italic",
+                    }}
+                  >
+                    {definition.value}
+                  </div>
+                </div>
+              ) : (
+                ""
+              )}
+
               <div style={{ flex: 1 }} />
 
               {gameState === "win" && (
@@ -622,56 +680,6 @@ export default function App() {
                     }}
                   >
                     Hint
-                  </a>
-                </div>
-                <div
-                  className="animate-all-fast"
-                  style={{
-                    marginBottom: 16,
-                    marginLeft: 16,
-                    color: colors.black,
-                    alignSelf: "flex-end",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    opacity:
-                      !isFirstGame || attempts.length > 1 || attempts.length > 0
-                        ? 1
-                        : 0,
-                    transform:
-                      attempts.length > 0
-                        ? "translateY(0px)"
-                        : "translateY(16px)",
-                    pointerEvents:
-                      !isFirstGame || attempts.length > 1 || attempts.length > 0
-                        ? "all"
-                        : "none",
-                  }}
-                >
-                  <a
-                    href="#"
-                    style={{ color: colors.black }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      const word = attempts[attempts.length - 1].toLowerCase();
-                      fetch(
-                        "https://api.dictionaryapi.dev/api/v2/entries/en/" +
-                          word
-                      )
-                        .then((response) => response.json())
-                        .then((data) =>
-                          alert(
-                            capitalizeFirst(
-                              `${word}: ${
-                                data[0]?.meanings[0]?.definitions[0]
-                                  ?.definition || "unknown."
-                              }`
-                            )
-                          )
-                        );
-                    }}
-                  >
-                    Define
                   </a>
                 </div>
                 <div style={{ flex: 1 }} />

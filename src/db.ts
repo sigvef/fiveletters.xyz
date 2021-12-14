@@ -19,6 +19,7 @@ export const storeAttempt = async (record: {
   game_id: string;
   step: number;
   is_valid_attempt: boolean;
+  is_solution_word: boolean;
 }) => {
   const created_at = new Date();
   (await db).add("attempts", {
