@@ -524,11 +524,8 @@ export default function App() {
                         : 32,
                     }}
                     onClick={(e) => {
-                      if (!isPremium) {
-                        setShowPremiumModal(true);
-                      } else {
-                        setShowStatsModal(true);
-                      }
+                      e.preventDefault();
+                      setShowStatsModal(true);
                     }}
                   >
                     View stats
@@ -597,9 +594,7 @@ export default function App() {
                     justifyContent: "center",
                     alignItems: "center",
                     opacity:
-                      !isFirstGame ||
-                      attempts.length > 1 ||
-                      (isPremium && attempts.length > 0)
+                      !isFirstGame || attempts.length > 1 || attempts.length > 0
                         ? 1
                         : 0,
                     transform:
@@ -607,9 +602,7 @@ export default function App() {
                         ? "translateY(0px)"
                         : "translateY(8px)",
                     pointerEvents:
-                      !isFirstGame ||
-                      attempts.length > 1 ||
-                      (isPremium && attempts.length > 0)
+                      !isFirstGame || attempts.length > 1 || attempts.length > 0
                         ? "all"
                         : "none",
                   }}
@@ -619,10 +612,6 @@ export default function App() {
                     style={{ color: colors.black }}
                     onClick={(e) => {
                       e.preventDefault();
-                      if (!isPremium) {
-                        setShowPremiumModal(true);
-                        return;
-                      }
                       const hintableIndexes = colorings.deduced
                         .map((x, i) => (x ? -1 : i))
                         .filter((x) => x > -1);
@@ -647,9 +636,7 @@ export default function App() {
                     justifyContent: "center",
                     alignItems: "center",
                     opacity:
-                      !isFirstGame ||
-                      attempts.length > 1 ||
-                      (isPremium && attempts.length > 0)
+                      !isFirstGame || attempts.length > 1 || attempts.length > 0
                         ? 1
                         : 0,
                     transform:
@@ -657,9 +644,7 @@ export default function App() {
                         ? "translateY(0px)"
                         : "translateY(16px)",
                     pointerEvents:
-                      !isFirstGame ||
-                      attempts.length > 1 ||
-                      (isPremium && attempts.length > 0)
+                      !isFirstGame || attempts.length > 1 || attempts.length > 0
                         ? "all"
                         : "none",
                   }}
@@ -669,10 +654,6 @@ export default function App() {
                     style={{ color: colors.black }}
                     onClick={(e) => {
                       e.preventDefault();
-                      if (!isPremium) {
-                        setShowPremiumModal(true);
-                        return;
-                      }
                       const word = attempts[attempts.length - 1].toLowerCase();
                       fetch(
                         "https://api.dictionaryapi.dev/api/v2/entries/en/" +

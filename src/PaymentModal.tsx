@@ -148,7 +148,7 @@ export const PaymentModal: React.FC<{
                   color: colors.extraBlack,
                 }}
               >
-                3
+                5
               </span>
               <span
                 style={{
@@ -157,22 +157,17 @@ export const PaymentModal: React.FC<{
                   color: colors.darkContrastText,
                 }}
               >
-                / mo
+                / year
               </span>
             </div>
             {[
               {
-                text: "Hints & solutions",
-                sub: "Get extra hints or see the solution if you get stuck.",
+                text: "No extra features",
+                sub: "All features that would have been in the premium version are already available for\xA0free!",
               },
               {
-                text: "Statistics & breakdowns",
-                sub: "Detailed analysis of your own games.",
-              },
-              { text: "No ads", sub: "Just like the free version!" },
-              {
-                text: "Cancel any time",
-                sub: "",
+                text: "Support development",
+                sub: "If you like Five Letters, please consider splurging on Five Letters Premium. It helps support the continued development of new features :)",
               },
             ].map((item, i) => (
               <div
