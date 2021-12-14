@@ -53,6 +53,7 @@ export default function App() {
   const [showStatsModal, setShowStatsModal] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [isFirstGame, setIsFirstGame] = useState(true);
+  const [defineHint, setDefineHint] = useState<undefined | null | string>(null);
 
   const setShowPremiumModal = (value: boolean) => {
     _setShowPremiumModal(value);
@@ -669,6 +670,18 @@ export default function App() {
                     style={{ color: colors.black }}
                     onClick={(e) => {
                       e.preventDefault();
+                      fetch(
+                        "https://api.dictionaryapi.dev/api/v2/entries/en/" +
+                          answer
+                      )
+                        .then((response) => response.json())
+                        .then((data) =>
+                          setDefineHint(
+                            data[0]?.meanings[0]?.definitions[0]?.definition ||
+                              "unknown."
+                          )
+                        );
+                      return;
                       const hintableIndexes = colorings.deduced
                         .map((x, i) => (x ? -1 : i))
                         .filter((x) => x > -1);
@@ -777,6 +790,23 @@ export default function App() {
           </div>
         </>
       </Modal>
+
+      {defineHint !== null && (
+        <Modal visible={true} dismiss={() => setDefineHint(null)}>
+          <div style={{ fontWeight: "bold", marginBottom: 16 }}>
+            The solution is...
+          </div>
+          <div style={{ marginBottom: 16, fontSize: 18 }}>...{defineHint}</div>
+          <Button
+            onClick={(e) => {
+              e.preventDefault();
+              setDefineHint(null);
+            }}
+          >
+            OK
+          </Button>
+        </Modal>
+      )}
 
       <PaymentModal
         visible={showPremiumModal}
