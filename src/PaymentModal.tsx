@@ -98,25 +98,6 @@ export const PaymentModal: React.FC<{
             >
               Five Letters Premium
             </div>
-            <button
-              onClick={() => {
-                dismiss();
-              }}
-              style={{
-                background: "transparent",
-                border: 0,
-                position: "absolute",
-                top: -8,
-                right: -8,
-                color: colors.black,
-                padding: 16,
-                borderRadius: 9999,
-                cursor: "pointer",
-              }}
-            >
-              <XIcon size={24} />
-            </button>
-
             <div
               style={{
                 marginBottom: 16,

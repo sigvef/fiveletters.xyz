@@ -23,7 +23,6 @@ import { Line } from "./Line";
 import { storeAttempt } from "./db";
 import { Stats } from "./Stats";
 import { Modal } from "./Modal";
-import { InfoIcon, XIcon } from "@primer/octicons-react";
 
 const allOutlineArray = [...new Array(5)].map(() => "outline" as const);
 
@@ -735,49 +734,24 @@ export default function App() {
 
       <Modal visible={showAboutModal} dismiss={() => setShowAboutModal(false)}>
         <>
-          <button
-            onClick={() => {
-              setShowAboutModal(false);
-            }}
-            style={{
-              background: "transparent",
-              border: 0,
-              position: "absolute",
-              top: -8,
-              right: -8,
-              color: colors.black,
-              padding: 16,
-              borderRadius: 9999,
-              cursor: "pointer",
-            }}
-          >
-            <XIcon size={24} />
-          </button>
-
-          <div style={{ marginBottom: 16, paddingRight: 8 }}>
-            <strong>Five Letters</strong> is a weekend technology experiment.
-            The idea was to test if it was possible to sell subscriptions to a
-            frontend web app with no backend, only a store provider. Turns out,
-            it works!{" "}
-          </div>
-          <div style={{ marginBottom: 16, paddingRight: 8 }}>
-            <a
-              href="https://fiveletters.gumroad.com/l/five-letters-premium"
-              style={{ color: colors.black }}
-            >
-              Gumroad.com
-            </a>{" "}
-            is used for subscription management.
-          </div>
-          <div style={{ paddingRight: 8 }}>
-            The game concept itself is a cross between{" "}
+          <div style={{ marginBottom: 32, paddingRight: 8 }}>
+            <strong>Five Letters</strong> is a cross between{" "}
             <a
               href="https://en.wikipedia.org/wiki/Mastermind_(board_game)"
               style={{ color: colors.black }}
             >
               Mastermind
             </a>{" "}
-            and classic word guessing games. Similar games include{" "}
+            and classic word guessing games.
+          </div>
+          <div style={{ marginBottom: 32, paddingRight: 8 }}>
+            The objective of the game is to guess the hidden five letter word.
+            For each guess, you will be told how many of the letters that you
+            guessed are correct.
+          </div>
+
+          <div style={{ paddingRight: 8 }}>
+            If you like this game, you should also check out{" "}
             <a
               href="https://en.wikipedia.org/wiki/Lingo_(American_game_show)"
               style={{ color: colors.black }}

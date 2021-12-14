@@ -1,3 +1,4 @@
+import { XIcon } from "@primer/octicons-react";
 import { memo } from "react";
 import { borderRadius, colors, containerMaxWidth } from "./colors";
 import { isSuperTinyMobileScreen } from "./utils";
@@ -34,6 +35,7 @@ export const Modal: React.FC<{
         bottom: 0,
         opacity: visible ? 1 : 0,
         transform: `translate3D(0, ${visible ? 0 : "32px"}, 0)`,
+        overflowY: "auto",
       }}
     >
       <div
@@ -56,6 +58,25 @@ export const Modal: React.FC<{
             margin: "0 auto",
           }}
         >
+          <button
+            onClick={() => {
+              dismiss();
+            }}
+            style={{
+              background: "transparent",
+              border: 0,
+              position: "absolute",
+              top: -8,
+              right: -8,
+              color: colors.black,
+              padding: 16,
+              borderRadius: 9999,
+              cursor: "pointer",
+            }}
+          >
+            <XIcon size={24} />
+          </button>
+
           {children}
         </div>
       </div>
