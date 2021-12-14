@@ -95,6 +95,9 @@ export const Keyboard: React.FC<{
         if (colorings[letter] !== "wrong") {
           setActive(letter);
         }
+        if (letter === "b" && e.repeat) {
+          onKeyPress("b");
+        }
       };
       const keyup = (e: KeyboardEvent) => {
         let letter = e.key.toUpperCase();
