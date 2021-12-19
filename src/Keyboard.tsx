@@ -15,6 +15,7 @@ export const Keyboard: React.FC<{
 }> = memo(({ colorings, onKeyPress }) => {
   const div = useRef<HTMLDivElement>();
   const rows = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNMb"];
+  const longPressTimeoutId = useRef<number | null>(null);
   const longestRow = rows.reduce((row, accumulator) =>
     row.length > accumulator.length ? row : accumulator
   );
@@ -61,6 +62,18 @@ export const Keyboard: React.FC<{
         const letter = getCurrentKey(
           "touches" in e ? [...e.touches] : makeFakeTouchList(e)
         );
+        if (letter === "b" && "touches" in e) {
+          const id = setTimeout(() => {
+            if (longPressTimeoutId.current === id) {
+              longPressTimeoutId.current = null;
+              setActive(null);
+              for (let i = 0; i < 5; i++) {
+                onKeyPress(letter);
+              }
+            }
+          }, 400);
+          longPressTimeoutId.current = id;
+        }
         setActive(colorings[letter || ""] === "wrong" ? null : letter);
       };
       const touchmove = (e: TouchEvent | MouseEvent) => {
@@ -68,10 +81,18 @@ export const Keyboard: React.FC<{
         const letter = getCurrentKey(
           "touches" in e ? [...e.touches] : makeFakeTouchList(e)
         );
+        if (longPressTimeoutId.current !== null) {
+          clearTimeout(longPressTimeoutId.current);
+          longPressTimeoutId.current = null;
+        }
         setActive(colorings[letter || ""] === "wrong" ? null : letter);
       };
       const touchend = (e: TouchEvent | MouseEvent) => {
         e.preventDefault();
+        if (longPressTimeoutId.current !== null) {
+          clearTimeout(longPressTimeoutId.current);
+          longPressTimeoutId.current = null;
+        }
         setActive(null);
         const letter = getCurrentKey(
           "touches" in e ? [...e.changedTouches] : makeFakeTouchList(e)
