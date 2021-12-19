@@ -27,5 +27,21 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-4FQBX7H5MN"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("consent", "default", {
+        ad_storage: "denied",
+      });
+      gtag("config", "G-4FQBX7H5MN");
+    </script>
   </body>
 </html>
