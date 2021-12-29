@@ -8,7 +8,18 @@ export const Stats: React.FC<{ visible: boolean }> = ({ visible }) => {
   const gameIdSet = new Set();
   const stepCount: any = {};
   const wordCounts: { [key: string]: number } = {};
+  const now = new Date();
+  const oneWeekAgo = +now - 1000 * 60 * 60 * 24 * 7;
+  const oneMonthAgo = +now - 1000 * 60 * 60 * 24 * 30;
+  const cutoff = {
+    "all-time": 0,
+    week: oneWeekAgo,
+    month: oneMonthAgo,
+  }[tab];
   for (const attempt of allAttempts || []) {
+    if (+attempt.created_at <= cutoff) {
+      continue;
+    }
     gameIdSet.add(attempt.game_id);
     stepCount[attempt.step] = (stepCount[attempt.step] || 0) + 1;
     if (attempt.is_valid_attempt) {
@@ -33,9 +44,6 @@ export const Stats: React.FC<{ visible: boolean }> = ({ visible }) => {
   }, [visible]);
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      <div style={{ marginBottom: 16 }}>
-        Stats are currently under construction. *insert gif here*
-      </div>
       <div
         style={{
           display: "flex",
@@ -49,13 +57,19 @@ export const Stats: React.FC<{ visible: boolean }> = ({ visible }) => {
         }}
       >
         {[
-          { text: "Week", key: "week" },
-          { text: "Month", key: "month" },
-          { text: "All time", key: "all-time" },
+          { text: "Week", key: "week" as const },
+          { text: "Month", key: "month" as const },
+          { text: "All time", key: "all-time" as const },
         ].map((item) => (
-          <div
+          <a
+            href="#"
             key={item.key}
+            onClick={(e) => {
+              e.preventDefault();
+              setTab(item.key);
+            }}
             style={{
+              textDecoration: "none",
               padding: "4px 16px 4px 16px",
               whiteSpace: "nowrap",
               borderRadius: borderRadius - 2,
@@ -64,7 +78,7 @@ export const Stats: React.FC<{ visible: boolean }> = ({ visible }) => {
             }}
           >
             {item.text}
-          </div>
+          </a>
         ))}
       </div>
       <div style={{ marginTop: 32 }}>{gameIdSet.size} games played.</div>
