@@ -1,6 +1,6 @@
 <p align="center"><a href="https://fiveletters.xyz"><img src="https://www.fiveletters.xyz/og.png" /></a></p>
 
-<h1 align="center"><a href="https://fiveletters.xyz">Five Letters</a></h1>
+<h1 align="center">Five Letters</h1>
 <p align="center"><em>Addictive word puzzle game</em></p>
 <p align="center"><a href="https://fiveletters.xyz">Play online<a> • <a href="http://www.twitter.com/share?text=Five Letters - Addictive word puzzle game&url=https://fiveletters.xyz">
 Share</a> • <a href="https://fiveletters.xyz#getpremium">Get Premium</a></p>
