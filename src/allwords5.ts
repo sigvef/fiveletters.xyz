@@ -1,4 +1,4 @@
-export const allWords = [
+export const allWords5 = [
   "AAHED",
   "AALII",
   "AARGH",

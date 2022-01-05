@@ -5,9 +5,15 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { allWords } from "./allwords";
+import { allWords3 } from "./allwords3";
+import { allWords4 } from "./allwords4";
+import { allWords5 } from "./allwords5";
+import { allWords6 } from "./allwords6";
 import { generateGameId, getAllColorings, HelperState } from "./game";
-import { words } from "./words";
+import { words3 } from "./words3";
+import { words4 } from "./words4";
+import { words5 } from "./words5";
+import { words6 } from "./words6";
 import { colors, containerMaxWidth } from "./colors";
 import { Button } from "./Button";
 import {
@@ -26,9 +32,12 @@ import { Modal } from "./Modal";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const allOutlineArray = [...new Array(5)].map(() => "outline" as const);
+const allOutlineArray = [...new Array(99)].map(() => "outline" as const);
 
-const allWordsSet = new Set(allWords);
+const allWordsSet3 = new Set(allWords3);
+const allWordsSet4 = new Set(allWords4);
+const allWordsSet5 = new Set(allWords5);
+const allWordsSet6 = new Set(allWords6);
 
 let hasBootstrappedGumroad = false;
 
@@ -42,6 +51,37 @@ export default function App() {
   const [isPremium, _setIsPremium] = useState(
     localStorage.getItem("fiveletters.xyz:cachedIsPremium") === "true"
   );
+
+  const slug = window.location.pathname;
+  const allWords =
+    {
+      "/three": allWords3,
+      "/four": allWords4,
+      "/": allWords5,
+      "/six": allWords6,
+    }[slug] || allWords5;
+  const words =
+    {
+      "/three": words3,
+      "/four": words4,
+      "/": words5,
+      "/six": words6,
+    }[slug] || words5;
+  const allWordsSet =
+    {
+      "/three": allWordsSet3,
+      "/four": allWordsSet4,
+      "/": allWordsSet5,
+      "/six": allWordsSet6,
+    }[slug] || allWordsSet5;
+  const countName =
+    {
+      "/three": "Three",
+      "/four": "Four",
+      "/": "Five",
+      "/six": "Six",
+    }[slug] || "Five";
+
   const setIsPremium = (value: boolean) => {
     localStorage.setItem(
       "fiveletters.xyz:cachedIsPremium",
@@ -277,9 +317,12 @@ export default function App() {
         inputValueRef.current = inputValueRef.current.slice(0, -1);
         forceRefresh();
       } else {
-        inputValueRef.current = (inputValueRef.current + letter).slice(0, 5);
+        inputValueRef.current = (inputValueRef.current + letter).slice(
+          0,
+          answer.length
+        );
         forceRefresh();
-        if (inputValueRef.current.length === 5) {
+        if (inputValueRef.current.length === answer.length) {
           makeAttempt(inputValueRef.current, answer, attempts, false);
         }
       }
@@ -355,7 +398,7 @@ export default function App() {
               color: colors.extraBlack,
             }}
           >
-            <div>Five Letters</div>
+            <div>{countName} Letters</div>
           </div>
 
           <div
@@ -388,7 +431,7 @@ export default function App() {
                 <Line
                   //@ts-expect-error
                   ref={inputLineRef}
-                  word={inputValueRef.current.padEnd(5, " ")}
+                  word={inputValueRef.current.padEnd(answer.length, " ")}
                   coloring={[...new Array(answer.length)].map(() => "unknown")}
                   letterHints={colorings.deduced}
                   letterBoxSize={letterBoxSize}
@@ -404,7 +447,7 @@ export default function App() {
                 ].map((_, i) => (
                   <div key={i} style={{ marginBottom: 8 }}>
                     <Line
-                      word={"     "}
+                      word={"".padEnd(answer.length, " ")}
                       coloring={allOutlineArray}
                       letterBoxSize={letterBoxSize}
                       gutterSize={letterGutter}
@@ -418,7 +461,9 @@ export default function App() {
               style={{
                 display: "flex",
                 flexDirection: "column",
-                width: letterBoxSize * 5 + letterGutter * 4,
+                width:
+                  letterBoxSize * answer.length +
+                  letterGutter * (answer.length - 1),
                 margin: "0 auto",
               }}
             >
@@ -490,7 +535,7 @@ export default function App() {
               {gameState === "play" &&
                 isFirstGame &&
                 remainingAttempts === maxAttempts &&
-                inputValueRef.current.length !== 5 && (
+                inputValueRef.current.length !== answer.length && (
                   <div
                     style={{
                       marginTop: 32,
@@ -505,7 +550,7 @@ export default function App() {
               {gameState === "play" &&
                 isFirstGame &&
                 remainingAttempts === maxAttempts &&
-                inputValueRef.current.length === 5 && (
+                inputValueRef.current.length === answer.length && (
                   <>
                     <div
                       style={{
@@ -514,8 +559,7 @@ export default function App() {
                         marginBottom: 16,
                       }}
                     >
-                      You must guess an existing English
-                      five&nbsp;letter&nbsp;word.
+                      You must guess an existing English word.
                     </div>
                     <div>
                       To get started, try{" "}
