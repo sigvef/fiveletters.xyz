@@ -59,6 +59,7 @@ export const Modal: React.FC<{
           }}
         >
           <button
+            aria-label="dismiss"
             onClick={() => {
               dismiss();
             }}
