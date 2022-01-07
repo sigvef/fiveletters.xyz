@@ -4,7 +4,7 @@ import "./index.css";
 import App from "./App";
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("./serviceWorker.js");
+  navigator.serviceWorker.register("/serviceWorker.js");
 }
 
 ReactDOM.render(
