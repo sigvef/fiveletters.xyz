@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build && node compile_service_worker.js",
     "preview": "vite preview"
   },
   "dependencies": {
