@@ -1,6 +1,7 @@
 {
   "name": "Five Letters",
   "short_name": "Five Letters",
+  "start_url": "https://fiveletters.xyz",
   "icons": [
     {
       "src": "/icon-192x192.png",
