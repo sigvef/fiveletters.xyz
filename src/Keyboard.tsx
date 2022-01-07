@@ -194,6 +194,7 @@ export const Keyboard: React.FC<{
           >
             {letter === "b" ? (
               <img
+                alt="backspace"
                 src={backspaceImage}
                 style={{
                   width: 32,
