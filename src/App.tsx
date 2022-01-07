@@ -52,7 +52,11 @@ export default function App() {
     localStorage.getItem("fiveletters.xyz:cachedIsPremium") === "true"
   );
 
-  const slug = window.location.pathname;
+  let slug = window.location.pathname;
+  if (!(slug in { "/three": true, "/four": true, "/six": true, "/": true })) {
+    window.location.href = "/";
+    slug = "/";
+  }
   const allWords =
     {
       "/three": allWords3,
@@ -350,6 +354,36 @@ export default function App() {
         }}
       >
         <div style={styles.container}>
+          <select
+            className="animate-all"
+            style={{
+              background: "transparent",
+              border: 0,
+              outline: 0,
+              fontSize: 22,
+              lineHeight: 1.33,
+              color: colors.black,
+              position: "absolute",
+              top: 16,
+              left: 16,
+              opacity: hasNotMadeAnyAttemptYet ? 1 : 0,
+              pointerEvents:
+                isFirstGame && hasNotMadeAnyAttemptYet ? "all" : "none",
+              transform:
+                isFirstGame && hasNotMadeAnyAttemptYet
+                  ? "translateY(0px)"
+                  : "translateY(-32px)",
+            }}
+            value={slug}
+            onChange={(e) => {
+              e.preventDefault();
+              window.location.href = e.target.value;
+            }}
+          >
+            <option value="/three">Three</option>
+            <option value="/four">Four</option>
+            <option value="/">Five</option>
+          </select>
           <a
             className="animate-all"
             href="#"
