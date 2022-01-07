@@ -345,6 +345,43 @@ export default function App() {
         overflow: "hidden",
       }}
     >
+      <Modal visible={showAboutModal} dismiss={() => setShowAboutModal(false)}>
+        <>
+          <div style={{ marginBottom: 32, paddingRight: 8 }}>
+            <strong>Five Letters</strong> is a cross between{" "}
+            <a
+              href="https://en.wikipedia.org/wiki/Mastermind_(board_game)"
+              style={{ color: colors.black }}
+            >
+              Mastermind
+            </a>{" "}
+            and classic word guessing games.
+          </div>
+          <div style={{ marginBottom: 32, paddingRight: 8 }}>
+            The objective of the game is to guess the hidden five letter word.
+            For each guess, you will be told how many of the letters that you
+            guessed are correct.
+          </div>
+
+          <div style={{ paddingRight: 8 }}>
+            If you like this game, you should also check out{" "}
+            <a
+              href="https://en.wikipedia.org/wiki/Lingo_(American_game_show)"
+              style={{ color: colors.black }}
+            >
+              Lingo (game show)
+            </a>{" "}
+            and{" "}
+            <a
+              href="https://www.powerlanguage.co.uk/wordle/"
+              style={{ color: colors.black }}
+            >
+              Wordle
+            </a>
+            .
+          </div>
+        </>
+      </Modal>
       <div
         style={{
           flex: 1,
@@ -836,44 +873,6 @@ export default function App() {
 
       <Modal visible={showStatsModal} dismiss={() => setShowStatsModal(false)}>
         <Stats visible={showStatsModal} />
-      </Modal>
-
-      <Modal visible={showAboutModal} dismiss={() => setShowAboutModal(false)}>
-        <>
-          <div style={{ marginBottom: 32, paddingRight: 8 }}>
-            <strong>Five Letters</strong> is a cross between{" "}
-            <a
-              href="https://en.wikipedia.org/wiki/Mastermind_(board_game)"
-              style={{ color: colors.black }}
-            >
-              Mastermind
-            </a>{" "}
-            and classic word guessing games.
-          </div>
-          <div style={{ marginBottom: 32, paddingRight: 8 }}>
-            The objective of the game is to guess the hidden five letter word.
-            For each guess, you will be told how many of the letters that you
-            guessed are correct.
-          </div>
-
-          <div style={{ paddingRight: 8 }}>
-            If you like this game, you should also check out{" "}
-            <a
-              href="https://en.wikipedia.org/wiki/Lingo_(American_game_show)"
-              style={{ color: colors.black }}
-            >
-              Lingo (game show)
-            </a>{" "}
-            and{" "}
-            <a
-              href="https://www.powerlanguage.co.uk/wordle/"
-              style={{ color: colors.black }}
-            >
-              Wordle
-            </a>
-            .
-          </div>
-        </>
       </Modal>
 
       <Modal

@@ -16,6 +16,7 @@ export const Modal: React.FC<{
       bottom: 0,
       pointerEvents: visible ? "all" : "none",
       overflow: "hidden",
+      zIndex: 99999,
     }}
   >
     <div
