@@ -1,5 +1,6 @@
+const cacheName = "SHA_HASH";
+
 self.addEventListener("install", (e) => {
-  const cacheName = "SHA_HASH";
   const contentToCache = [
     /* FILES */
   ];
