@@ -440,6 +440,7 @@ export default function App() {
             <option value="/three">Three</option>
             <option value="/four">Four</option>
             <option value="/">Five</option>
+            <option value="/six">Six</option>
           </select>
           <a
             className="animate-all"
