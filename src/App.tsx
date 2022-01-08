@@ -53,7 +53,18 @@ export default function App() {
   );
 
   let slug = window.location.pathname;
-  if (!(slug in { "/three": true, "/four": true, "/six": true, "/": true })) {
+  if (
+    !(
+      slug in
+      {
+        "/three": true,
+        "/four": true,
+        "/six": true,
+        "/": true,
+        "/getpremium": true,
+      }
+    )
+  ) {
     window.location.href = "/";
     slug = "/";
   }
@@ -62,6 +73,7 @@ export default function App() {
       "/three": allWords3,
       "/four": allWords4,
       "/": allWords5,
+      "/getpremium": allWords5,
       "/six": allWords6,
     }[slug] || allWords5;
   const words =
@@ -69,6 +81,7 @@ export default function App() {
       "/three": words3,
       "/four": words4,
       "/": words5,
+      "/getpremium": words5,
       "/six": words6,
     }[slug] || words5;
   const allWordsSet =
@@ -76,6 +89,7 @@ export default function App() {
       "/three": allWordsSet3,
       "/four": allWordsSet4,
       "/": allWordsSet5,
+      "/getpremium": allWordsSet5,
       "/six": allWordsSet6,
     }[slug] || allWordsSet5;
   const countName =
@@ -83,6 +97,7 @@ export default function App() {
       "/three": "Three",
       "/four": "Four",
       "/": "Five",
+      "/getpremium": "Five",
       "/six": "Six",
     }[slug] || "Five";
 
@@ -93,7 +108,9 @@ export default function App() {
     );
     _setIsPremium(value);
   };
-  const [showPremiumModal, _setShowPremiumModal] = useState(false);
+  const [showPremiumModal, _setShowPremiumModal] = useState(
+    slug === "/getpremium"
+  );
   const [showStatsModal, setShowStatsModal] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [isFirstGame, setIsFirstGame] = useState(true);
@@ -104,6 +121,9 @@ export default function App() {
 
   const setShowPremiumModal = (value: boolean) => {
     _setShowPremiumModal(value);
+    if (!value && slug === "/getpremium") {
+      history.replaceState({}, "", "/");
+    }
     if (value && !hasBootstrappedGumroad) {
       hasBootstrappedGumroad = true;
       const script = document.createElement("script");
