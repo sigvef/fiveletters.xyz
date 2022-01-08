@@ -2,7 +2,7 @@ const fs = require("fs");
 const child_process = require("child_process");
 
 const sha_hash = child_process.execSync("git rev-parse HEAD").toString().trim();
-const filenames = ["/"];
+const filenames = ["/", "/three", "/four", "/getpremium"];
 
 function findFilenames(path) {
   if (fs.lstatSync(path).isDirectory()) {
