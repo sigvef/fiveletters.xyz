@@ -29,6 +29,7 @@ import { Line } from "./Line";
 import { storeAttempt } from "./db";
 import { Stats } from "./Stats";
 import { Modal } from "./Modal";
+import { MarkGithubIcon } from "@primer/octicons-react";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -399,6 +400,20 @@ export default function App() {
               Wordle
             </a>
             .
+          </div>
+
+          <div style={{ marginTop: 32 }}>
+            <a
+              href="https://github.com/sigvef/fiveletters.xyz"
+              style={{
+                color: colors.black,
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <MarkGithubIcon size={24} />
+              <div style={{ marginLeft: 8 }}>Follow development on GitHub.</div>
+            </a>
           </div>
         </>
       </Modal>
