@@ -218,23 +218,21 @@ export default function App() {
       });
       if (isValidAttempt) {
         const word = attempt.toLowerCase();
-        if (!isSolutionWord) {
-          setDefinition((old) => ({ ...old, isLoading: true }));
-          Promise.all([
-            delay(1000),
-            fetch(
-              "https://api.dictionaryapi.dev/api/v2/entries/en/" + word
-            ).then((response) => response.json()),
-          ]).then(([, data]) => {
-            setDefinition({
-              isLoading: false,
-              word,
-              value: capitalizeFirst(
-                data[0]?.meanings[0]?.definitions[0]?.definition || "unknown."
-              ),
-            });
+        setDefinition((old) => ({ ...old, isLoading: true }));
+        Promise.all([
+          delay(1000),
+          fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + word).then(
+            (response) => response.json()
+          ),
+        ]).then(([, data]) => {
+          setDefinition({
+            isLoading: false,
+            word,
+            value: capitalizeFirst(
+              data[0]?.meanings[0]?.definitions[0]?.definition || "unknown."
+            ),
           });
-        }
+        });
 
         if (attempts.length === 1) {
           setHasNotMadeAnyAttemptYet(false);
