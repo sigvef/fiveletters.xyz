@@ -18,6 +18,7 @@ import { colors, containerMaxWidth } from "./colors";
 import { Button } from "./Button";
 import {
   capitalizeFirst,
+  isMobileScreen,
   isSuperTinyMobileScreen,
   startAnimation,
 } from "./utils";
@@ -423,7 +424,18 @@ export default function App() {
           overflow: "hidden",
         }}
       >
-        <div style={styles.container}>
+        <div
+          className="animate-all"
+          style={{
+            ...styles.container,
+            ...(isMobileScreen(window.innerWidth, window.innerHeight)
+              ? {}
+              : {
+                  margin: "16px auto",
+                  borderRadius: 16,
+                }),
+          }}
+        >
           <select
             className="animate-all"
             style={{

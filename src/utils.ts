@@ -3,6 +3,8 @@ export const capitalizeFirst = (value: string) => {
 };
 
 export const isSuperTinyMobileScreen = (height: number) => height <= 599;
+export const isMobileScreen = (width: number, height: number) =>
+  width <= 560 || isSuperTinyMobileScreen(height);
 
 export const makeFakeTouchList = (e: MouseEvent) => {
   return [
