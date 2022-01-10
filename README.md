@@ -13,6 +13,16 @@ Five Letters is a challenging word puzzle game where you try to guess the secret
 
 <br />
 
+Featuring:
+
+- ♾ Infinite play!
+- 📖 Word definitions!
+- 🕵️ Hints if you get stuck!
+- 🔢 Three, four, five and six letter word modes!
+- 🏝 Works offline!
+  
+<br />
+
 ## Rules of the game
 
 The best way to learn the game is to <a href="https://fiveletters.xyz">play it</a>, as it contains an unobtrusive interactive tutorial.
