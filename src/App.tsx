@@ -200,6 +200,7 @@ export default function App() {
   });
   const [hints, setHints] = useState<number[]>([]);
   const inputValueRef = useRef("");
+  const currentlyDefinedWordRef = useRef("");
 
   const makeAttempt = useCallback(
     (
@@ -219,21 +220,24 @@ export default function App() {
       });
       if (isValidAttempt) {
         const word = attempt.toLowerCase();
-        setDefinition((old) => ({ ...old, isLoading: true }));
-        Promise.all([
-          delay(1000),
-          fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + word).then(
-            (response) => response.json()
-          ),
-        ]).then(([, data]) => {
-          setDefinition({
-            isLoading: false,
-            word,
-            value: capitalizeFirst(
-              data[0]?.meanings[0]?.definitions[0]?.definition || "unknown."
-            ),
+        if (word !== currentlyDefinedWordRef.current) {
+          setDefinition((old) => ({ ...old, isLoading: true }));
+          Promise.all([
+            delay(1000),
+            fetch(
+              "https://api.dictionaryapi.dev/api/v2/entries/en/" + word
+            ).then((response) => response.json()),
+          ]).then(([, data]) => {
+            currentlyDefinedWordRef.current = word;
+            setDefinition({
+              isLoading: false,
+              word,
+              value: capitalizeFirst(
+                data[0]?.meanings[0]?.definitions[0]?.definition || "unknown."
+              ),
+            });
           });
-        });
+        }
 
         if (attempts.length === 1) {
           setHasNotMadeAnyAttemptYet(false);
