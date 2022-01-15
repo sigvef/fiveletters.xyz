@@ -6,14 +6,65 @@ import { borderRadius, colors, containerMaxWidth } from "./colors";
 import { Modal } from "./Modal";
 import { isSuperTinyMobileScreen } from "./utils";
 
+const translationsMap = {
+  no: {
+    getPremiumButtonText: "Aktiver",
+    year: "år",
+    invalidLicenseKey: "Ugyldig lisensenøkkel.",
+    pasteTheLicenseKey:
+      "Lim in linsensnøkkelen fra kvitteringen du fikk på epost:",
+    orRedeem: "...eller bruk en eksisterende kode",
+    premiumUnlocked: "Du har nå Premium!",
+    aReceiptHasBeenSentToYourEmail:
+      "Kvittering har blitt sendt til din epost-adresse. ",
+    thankYouForSupportingFiveLetters: "Takk for din støtte!",
+    resumeGame: "Tilbake til spillet",
+    sellingPoints: [
+      {
+        text: "Ingen ny funksjonalitet",
+        sub: "Alt som ville ha vært i en premium-version er allerede gratis\xA0tilgjenglig!",
+      },
+      {
+        text: "Støtt videre utvikling",
+        sub: "Med Five Letters Premium bidrar du til å støtte videre utvikling av ny funksjonalitet til spillet. For eksempel finnes spillet nå på norsk takket være støtten! :)",
+      },
+    ],
+  },
+  en: {
+    getPremiumButtonText: "Get Premium",
+    year: "year",
+    invalidLicenseKey: "Invalid license key.",
+    pasteTheLicenseKey:
+      "Paste the license key from your subscription email here:",
+    orRedeem: "...or redeem an existing code",
+    premiumUnlocked: "Premium unlocked!",
+    aReceiptHasBeenSentToYourEmail: "A receipt has been sent to your email. ",
+    thankYouForSupportingFiveLetters:
+      "Thank you for supporting Five&nbsp;Letters!",
+    resumeGame: "Resume game",
+    sellingPoints: [
+      {
+        text: "No extra features",
+        sub: "All features that would have been in the premium version are already available for\xA0free!",
+      },
+      {
+        text: "Support development",
+        sub: "If you like Five Letters, please consider splurging on Five Letters Premium. It helps support the continued development of new features :)",
+      },
+    ],
+  },
+};
+
 export const PaymentModal: React.FC<{
   visible: boolean;
   dismiss: () => void;
   onSuccess: () => void;
-}> = memo(({ visible, dismiss, onSuccess }) => {
+  language: "no" | "en";
+}> = memo(({ visible, dismiss, onSuccess, language }) => {
   const [showPaymentSuccess, setShowPaymentSuccess] = useState<
     boolean | "unlocked-from-code"
   >(false);
+  const translations = translationsMap[language];
   useEffect(() => {
     const messageHandler = (e: any) => {
       if (!e.isTrusted) {
@@ -26,12 +77,18 @@ export const PaymentModal: React.FC<{
       if (
         data.post_message_name === "sale" &&
         data.success === true &&
-        data.name === "Premium"
+        data.name === "Five Letters Premium"
       ) {
         //@ts-expect-error
         window.GumroadOverlay?.iframe?.remove();
+        [...document.querySelectorAll(".gumroad-loading-indicator")].forEach(
+          (x) => x.remove()
+        );
+        [...document.querySelectorAll(".gumroad-scroll-container")].forEach(
+          (x) => x.remove()
+        );
         onSuccess();
-        setShowPaymentSuccess(false);
+        setShowPaymentSuccess(true);
         localStorage.setItem("fiveletters.xyz:license_key", data.license_key);
       }
     };
@@ -66,7 +123,7 @@ export const PaymentModal: React.FC<{
                 fontWeight: "bold",
               }}
             >
-              Premium unlocked!
+              {translations.premiumUnlocked}
             </div>
             <div
               style={{
@@ -74,8 +131,8 @@ export const PaymentModal: React.FC<{
               }}
             >
               {showPaymentSuccess !== "unlocked-from-code" &&
-                "A receipt has been sent to your email. "}
-              Thank you for supporting Five&nbsp;Letters!
+                translations.aReceiptHasBeenSentToYourEmail}
+              {translations.thankYouForSupportingFiveLetters}
             </div>
 
             <Button
@@ -84,7 +141,7 @@ export const PaymentModal: React.FC<{
               }}
               style={{ marginTop: 32 }}
             >
-              Resume game
+              {translations.resumeGame}
             </Button>
           </div>
         ) : (
@@ -138,19 +195,10 @@ export const PaymentModal: React.FC<{
                   color: colors.darkContrastText,
                 }}
               >
-                / year
+                / {translations.year}
               </span>
             </div>
-            {[
-              {
-                text: "No extra features",
-                sub: "All features that would have been in the premium version are already available for\xA0free!",
-              },
-              {
-                text: "Support development",
-                sub: "If you like Five Letters, please consider splurging on Five Letters Premium. It helps support the continued development of new features :)",
-              },
-            ].map((item, i) => (
+            {translations.sellingPoints.map((item, i) => (
               <div
                 key={i}
                 style={{
@@ -186,15 +234,13 @@ export const PaymentModal: React.FC<{
               href="https://fiveletters.gumroad.com/l/yjxbev?wanted=true"
               data-gumroad-single-product="true"
             >
-              Get Premium
+              {translations.getPremiumButtonText}
             </Button>
             <div style={{ fontSize: 16 }}>
               <button
                 onClick={() => {
                   const license_key =
-                    prompt(
-                      "Paste the license key from your subscription email here:"
-                    ) || "";
+                    prompt(translations.pasteTheLicenseKey) || "";
                   if (license_key) {
                     verifyLicense(license_key, true).then((value) => {
                       if (value) {
@@ -205,7 +251,7 @@ export const PaymentModal: React.FC<{
                           license_key
                         );
                       } else {
-                        alert("Invalid license key.");
+                        alert(translations.invalidLicenseKey);
                       }
                     });
                   }
@@ -222,7 +268,7 @@ export const PaymentModal: React.FC<{
                   color: colors.black,
                 }}
               >
-                ...or redeem an existing code
+                {translations.orRedeem}
               </button>
             </div>
           </>

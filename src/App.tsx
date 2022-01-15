@@ -9,6 +9,8 @@ import { allWords3 } from "./allwords3";
 import { allWords4 } from "./allwords4";
 import { allWords5 } from "./allwords5";
 import { allWords6 } from "./allwords6";
+import { allWordNorwegian5 } from "./norwegian5";
+import { wordsNorwegian5 } from "./shortnorwegian5";
 import { generateGameId, getAllColorings, HelperState } from "./game";
 import { words3 } from "./words3";
 import { words4 } from "./words4";
@@ -40,10 +42,62 @@ const allWordsSet3 = new Set(allWords3);
 const allWordsSet4 = new Set(allWords4);
 const allWordsSet5 = new Set(allWords5);
 const allWordsSet6 = new Set(allWords6);
+const allWordsSetNorwegian5 = new Set(allWordNorwegian5);
 
 let hasBootstrappedGumroad = false;
 
 const maxAttempts = 5;
+
+const translationsMap = {
+  no: {
+    titles: [
+      "",
+      "",
+      "",
+      "Tre bokstaver",
+      "Fire bokstaver",
+      "Fem bokstaver",
+      "Seks bokstaver",
+    ],
+    about: "Om",
+    correctLetterRightPlace: "riktig bokstav, rett sted",
+    correctLetterWrongPlace: "riktig bokstav, feil sted",
+    guessTheWord: "Gjett ordet.",
+    youMustGuessAnExistingWord: "Du må gjette et fullstendig norsk ord.",
+    toGetStartedTry: "Prøv for eksempel",
+    youWin: "Riktig!",
+    viewStats: "Vis statistikk",
+    youLose: "Bedre lykke neste gang!",
+    theSolutionWas: "Riktig løsning var",
+    getPremium: "Skaff premium",
+    theSolutionIsEllipsis: "Løsningen er...",
+    playAgain: "Nytt spill",
+  },
+  en: {
+    titles: [
+      "",
+      "",
+      "",
+      "Three Letters",
+      "Four Letters",
+      "Five Letters",
+      "Six Letters",
+    ],
+    about: "About",
+    correctLetterRightPlace: "correct letter, right place",
+    correctLetterWrongPlace: "correct letter, wrong place",
+    guessTheWord: "Guess the word.",
+    youMustGuessAnExistingWord: "You must guess an existing English word.",
+    toGetStartedTry: "To get started, try",
+    youWin: "You win!",
+    viewStats: "View stats",
+    youLose: "Better luck next time!",
+    theSolutionWas: "The solution was",
+    getPremium: "Get premium",
+    theSolutionIsEllipsis: "The solution is...",
+    playAgain: "Play again",
+  },
+};
 
 export default function App() {
   const [, _setForceRefresh] = useState({});
@@ -64,14 +118,42 @@ export default function App() {
         "/six": true,
         "/": true,
         "/getpremium": true,
+        "/no/five": true,
+        "/no/getpremium": true,
       }
     )
   ) {
     window.location.href = "/";
     slug = "/";
   }
+
+  const language =
+    {
+      "/three": "en" as const,
+      "/four": "en" as const,
+      "/": "en" as const,
+      "/six": "en" as const,
+      "/getpremium": "en" as const,
+      "/no/five": "no" as const,
+      "/no/getpremium": "no" as const,
+    }[slug] || ("en" as const);
+  const keyboardMap = {
+    no: ["QWERTYUIOPÅ", "ASDFGHJKLØÆ", "ZXCVBNMb"],
+    en: ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNMb"],
+  }[language];
+  const isHintEnabledForLanguage = {
+    no: false,
+    en: true,
+  }[language];
+  const isDefinesEnabledForLanguage = {
+    no: false,
+    en: true,
+  }[language];
+  const translations = translationsMap[language];
   const allWords =
     {
+      "/no/five": allWordNorwegian5,
+      "/no/getpremium": allWordNorwegian5,
       "/three": allWords3,
       "/four": allWords4,
       "/": allWords5,
@@ -80,6 +162,8 @@ export default function App() {
     }[slug] || allWords5;
   const words =
     {
+      "/no/getpremium": wordsNorwegian5,
+      "/no/five": wordsNorwegian5,
       "/three": words3,
       "/four": words4,
       "/": words5,
@@ -88,20 +172,16 @@ export default function App() {
     }[slug] || words5;
   const allWordsSet =
     {
+      "/no/getpremium": allWordsSetNorwegian5,
+      "/no/five": allWordsSetNorwegian5,
       "/three": allWordsSet3,
       "/four": allWordsSet4,
       "/": allWordsSet5,
       "/getpremium": allWordsSet5,
       "/six": allWordsSet6,
     }[slug] || allWordsSet5;
-  const countName =
-    {
-      "/three": "Three",
-      "/four": "Four",
-      "/": "Five",
-      "/getpremium": "Five",
-      "/six": "Six",
-    }[slug] || "Five";
+
+  const count = words[0].length;
 
   const setIsPremium = (value: boolean) => {
     localStorage.setItem(
@@ -111,7 +191,7 @@ export default function App() {
     _setIsPremium(value);
   };
   const [showPremiumModal, _setShowPremiumModal] = useState(
-    slug === "/getpremium"
+    slug === "/getpremium" || slug === "/no/getpremium"
   );
   const [showStatsModal, setShowStatsModal] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
@@ -125,6 +205,9 @@ export default function App() {
     _setShowPremiumModal(value);
     if (!value && slug === "/getpremium") {
       history.replaceState({}, "", "/");
+    }
+    if (!value && slug === "/no/getpremium") {
+      history.replaceState({}, "", "/no/five");
     }
     if (value && !hasBootstrappedGumroad) {
       hasBootstrappedGumroad = true;
@@ -220,23 +303,25 @@ export default function App() {
       });
       if (isValidAttempt) {
         const word = attempt.toLowerCase();
-        if (word !== currentlyDefinedWordRef.current) {
-          setDefinition((old) => ({ ...old, isLoading: true }));
-          Promise.all([
-            delay(1000),
-            fetch(
-              "https://api.dictionaryapi.dev/api/v2/entries/en/" + word
-            ).then((response) => response.json()),
-          ]).then(([, data]) => {
-            currentlyDefinedWordRef.current = word;
-            setDefinition({
-              isLoading: false,
-              word,
-              value: capitalizeFirst(
-                data[0]?.meanings[0]?.definitions[0]?.definition || "unknown."
-              ),
+        if (isDefinesEnabledForLanguage) {
+          if (word !== currentlyDefinedWordRef.current) {
+            setDefinition((old) => ({ ...old, isLoading: true }));
+            Promise.all([
+              delay(1000),
+              fetch(
+                "https://api.dictionaryapi.dev/api/v2/entries/en/" + word
+              ).then((response) => response.json()),
+            ]).then(([, data]) => {
+              currentlyDefinedWordRef.current = word;
+              setDefinition({
+                isLoading: false,
+                word,
+                value: capitalizeFirst(
+                  data[0]?.meanings[0]?.definitions[0]?.definition || "unknown."
+                ),
+              });
             });
-          });
+          }
         }
 
         if (attempts.length === 1) {
@@ -324,7 +409,7 @@ export default function App() {
       textColor={colors.black}
       shadowColor={colors.black}
     >
-      Play again
+      {translations.playAgain}
     </Button>
   );
 
@@ -370,55 +455,111 @@ export default function App() {
       }}
     >
       <Modal visible={showAboutModal} dismiss={() => setShowAboutModal(false)}>
-        <>
-          <div style={{ marginBottom: 32, paddingRight: 8 }}>
-            <strong>Five Letters</strong> is a cross between{" "}
-            <a
-              href="https://en.wikipedia.org/wiki/Mastermind_(board_game)"
-              style={{ color: colors.black }}
-            >
-              Mastermind
-            </a>{" "}
-            and classic word guessing games.
-          </div>
-          <div style={{ marginBottom: 32, paddingRight: 8 }}>
-            The objective of the game is to guess the hidden five letter word.
-            For each guess, you will be told how many of the letters that you
-            guessed are correct.
-          </div>
+        {language === "no" && (
+          <>
+            <div style={{ marginBottom: 32, paddingRight: 8 }}>
+              <strong>Five Letters</strong> er en krysning mellom{" "}
+              <a
+                href="https://en.wikipedia.org/wiki/Mastermind_(board_game)"
+                style={{ color: colors.black }}
+              >
+                Mastermind
+              </a>{" "}
+              og andre klassiske ord-leker.
+            </div>
+            <div style={{ marginBottom: 32, paddingRight: 8 }}>
+              Målet med spillet er å gjette hva det skjulte ordet er. For hvert
+              gjett får du vite hvor mange bokstaver som er gjettet riktig.
+            </div>
 
-          <div style={{ paddingRight: 8 }}>
-            If you like this game, you should also check out{" "}
-            <a
-              href="https://en.wikipedia.org/wiki/Lingo_(American_game_show)"
-              style={{ color: colors.black }}
-            >
-              Lingo (game show)
-            </a>{" "}
-            and{" "}
-            <a
-              href="https://www.powerlanguage.co.uk/wordle/"
-              style={{ color: colors.black }}
-            >
-              Wordle
-            </a>
-            .
-          </div>
+            <div style={{ paddingRight: 8 }}>
+              Hvis du liker dette spillet, bør du også sjekke ut{" "}
+              <a
+                href="https://en.wikipedia.org/wiki/Lingo_(American_game_show)"
+                style={{ color: colors.black }}
+              >
+                Lingo (TV-program)
+              </a>{" "}
+              og{" "}
+              <a
+                href="https://www.powerlanguage.co.uk/wordle/"
+                style={{ color: colors.black }}
+              >
+                Wordle
+              </a>
+              .
+            </div>
 
-          <div style={{ marginTop: 32 }}>
-            <a
-              href="https://github.com/sigvef/fiveletters.xyz"
-              style={{
-                color: colors.black,
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              <MarkGithubIcon size={24} />
-              <div style={{ marginLeft: 8 }}>Follow development on GitHub.</div>
-            </a>
-          </div>
-        </>
+            <div style={{ marginTop: 32 }}>
+              <a
+                href="https://github.com/sigvef/fiveletters.xyz"
+                style={{
+                  color: colors.black,
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <MarkGithubIcon size={24} />
+                <div style={{ marginLeft: 8 }}>
+                  Følg videre utvikling på GitHub.
+                </div>
+              </a>
+            </div>
+          </>
+        )}
+        {language === "en" && (
+          <>
+            <div style={{ marginBottom: 32, paddingRight: 8 }}>
+              <strong>Five Letters</strong> is a cross between{" "}
+              <a
+                href="https://en.wikipedia.org/wiki/Mastermind_(board_game)"
+                style={{ color: colors.black }}
+              >
+                Mastermind
+              </a>{" "}
+              and classic word guessing games.
+            </div>
+            <div style={{ marginBottom: 32, paddingRight: 8 }}>
+              The objective of the game is to guess the hidden five letter word.
+              For each guess, you will be told how many of the letters that you
+              guessed are correct.
+            </div>
+
+            <div style={{ paddingRight: 8 }}>
+              If you like this game, you should also check out{" "}
+              <a
+                href="https://en.wikipedia.org/wiki/Lingo_(American_game_show)"
+                style={{ color: colors.black }}
+              >
+                Lingo (game show)
+              </a>{" "}
+              and{" "}
+              <a
+                href="https://www.powerlanguage.co.uk/wordle/"
+                style={{ color: colors.black }}
+              >
+                Wordle
+              </a>
+              .
+            </div>
+
+            <div style={{ marginTop: 32 }}>
+              <a
+                href="https://github.com/sigvef/fiveletters.xyz"
+                style={{
+                  color: colors.black,
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <MarkGithubIcon size={24} />
+                <div style={{ marginLeft: 8 }}>
+                  Follow development on GitHub.
+                </div>
+              </a>
+            </div>
+          </>
+        )}
       </Modal>
       <div
         style={{
@@ -466,6 +607,7 @@ export default function App() {
               window.location.href = e.target.value;
             }}
           >
+            <option value="/no/five">Fem 🇳🇴</option>
             <option value="/three">Three</option>
             <option value="/four">Four</option>
             <option value="/">Five</option>
@@ -492,7 +634,7 @@ export default function App() {
               setShowAboutModal(true);
             }}
           >
-            About
+            {translations.about}
           </a>
           <div
             className="animate-all"
@@ -519,7 +661,7 @@ export default function App() {
               color: colors.extraBlack,
             }}
           >
-            <div>{countName} Letters</div>
+            <div>{translations.titles[count]}</div>
           </div>
 
           <div
@@ -622,7 +764,7 @@ export default function App() {
                           backgroundColor: colors.green,
                         }}
                       />{" "}
-                      correct letter, right place
+                      {translations.correctLetterRightPlace}
                     </div>
                   )}
                   {showOrangeHelper === "show-now" && (
@@ -647,7 +789,7 @@ export default function App() {
                           backgroundColor: colors.yellow,
                         }}
                       />{" "}
-                      correct letter, wrong place
+                      {translations.correctLetterWrongPlace}
                     </div>
                   )}
                 </div>
@@ -664,7 +806,7 @@ export default function App() {
                       justifyContent: "center",
                     }}
                   >
-                    Guess the word.
+                    {translations.guessTheWord}
                   </div>
                 )}
 
@@ -680,10 +822,10 @@ export default function App() {
                         marginBottom: 16,
                       }}
                     >
-                      You must guess an existing English word.
+                      {translations.youMustGuessAnExistingWord}
                     </div>
                     <div>
-                      To get started, try{" "}
+                      {translations.toGetStartedTry}{" "}
                       <span
                         style={{
                           color: colors.yellow,
@@ -748,7 +890,7 @@ export default function App() {
                       color: colors.green,
                     }}
                   >
-                    You win!
+                    {translations.youWin}
                   </div>
                   {playAgainButton}
 
@@ -765,7 +907,7 @@ export default function App() {
                       setShowStatsModal(true);
                     }}
                   >
-                    View stats
+                    {translations.viewStats}
                   </a>
                 </div>
               )}
@@ -786,7 +928,7 @@ export default function App() {
                       display: "block",
                     }}
                   >
-                    Better luck next time!
+                    {translations.youLose}
                   </div>
                   <div
                     style={{
@@ -799,7 +941,7 @@ export default function App() {
                       display: "block",
                     }}
                   >
-                    The solution was{" "}
+                    {translations.theSolutionWas}
                     <span style={{ marginLeft: 4, color: colors.yellow }}>
                       {answer}
                     </span>
@@ -844,28 +986,30 @@ export default function App() {
                         : "none",
                   }}
                 >
-                  <a
-                    href="#"
-                    style={{ color: colors.black }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      fetch(
-                        "https://api.dictionaryapi.dev/api/v2/entries/en/" +
-                          answer
-                      )
-                        .then((response) => response.json())
-                        .then((data) =>
-                          setDefineHint({
-                            shouldShowModal: true,
-                            value:
-                              data[0]?.meanings[0]?.definitions[0]
-                                ?.definition || "unknown.",
-                          })
-                        );
-                    }}
-                  >
-                    Hint
-                  </a>
+                  {isHintEnabledForLanguage && (
+                    <a
+                      href="#"
+                      style={{ color: colors.black }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        fetch(
+                          "https://api.dictionaryapi.dev/api/v2/entries/en/" +
+                            answer
+                        )
+                          .then((response) => response.json())
+                          .then((data) =>
+                            setDefineHint({
+                              shouldShowModal: true,
+                              value:
+                                data[0]?.meanings[0]?.definitions[0]
+                                  ?.definition || "unknown.",
+                            })
+                          );
+                      }}
+                    >
+                      Hint
+                    </a>
+                  )}
                 </div>
                 <div style={{ flex: 1 }} />
                 {isPremium && (
@@ -907,12 +1051,13 @@ export default function App() {
                         setShowPremiumModal(true);
                       }}
                     >
-                      Get premium
+                      {translations.getPremium}
                     </a>
                   </div>
                 )}
               </div>
               <Keyboard
+                map={keyboardMap}
                 colorings={colorings.keyboardColorings}
                 onKeyPress={keyboardOnKeyPress}
               />
@@ -932,7 +1077,7 @@ export default function App() {
         }
       >
         <div style={{ fontWeight: "bold", marginBottom: 16 }}>
-          The solution is...
+          {translations.theSolutionIsEllipsis}
         </div>
         <div style={{ marginBottom: 16, fontSize: 18 }}>
           ...{defineHint.value}
@@ -951,6 +1096,7 @@ export default function App() {
         visible={showPremiumModal}
         dismiss={paymentModalOnDismiss}
         onSuccess={paymentModalOnSuccess}
+        language={language}
       />
     </div>
   );

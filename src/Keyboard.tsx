@@ -12,9 +12,10 @@ import { makeFakeTouchList } from "./utils";
 export const Keyboard: React.FC<{
   colorings: Colorings;
   onKeyPress: (letter: string) => void;
-}> = memo(({ colorings, onKeyPress }) => {
+  map: string[];
+}> = memo(({ colorings, onKeyPress, map }) => {
   const div = useRef<HTMLDivElement>();
-  const rows = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNMb"];
+  const rows = map;
   const longPressTimeoutId = useRef<number | null>(null);
   const longestRow = rows.reduce((row, accumulator) =>
     row.length > accumulator.length ? row : accumulator
@@ -35,7 +36,12 @@ export const Keyboard: React.FC<{
           const j = ((y + 2) / (keyHeight + 4)) | 0;
           const i = Math.max(
             Math.min(
-              ((-0.5 * (j * (keyWidth + 4)) + x - 16 + 2) / (keyWidth + 4)) | 0,
+              ((-0.5 * ((longestRow.length - rows[j].length) * (keyWidth + 4)) +
+                x -
+                16 +
+                2) /
+                (keyWidth + 4)) |
+                0,
               rows[j].length - 1
             ),
             0
@@ -110,7 +116,7 @@ export const Keyboard: React.FC<{
         if (letter === "BACKSPACE") {
           letter = "b";
         }
-        if ("QWERTYUIOPASDFGHJKLZXCVBNMb".indexOf(letter) === -1) {
+        if ("QWERTYUIOPASDFGHJKLZXCVBNMÆØÅb".indexOf(letter) === -1) {
           return;
         }
         if (colorings[letter] !== "wrong") {
@@ -125,7 +131,7 @@ export const Keyboard: React.FC<{
         if (letter === "BACKSPACE") {
           letter = "b";
         }
-        if ("QWERTYUIOPASDFGHJKLZXCVBNMb".indexOf(letter) === -1) {
+        if ("QWERTYUIOPASDFGHJKLZXCVBNMÆØÅb".indexOf(letter) === -1) {
           return;
         }
         setActive(null);
@@ -153,6 +159,7 @@ export const Keyboard: React.FC<{
       };
     }
   }, [div.current, onKeyPress]);
+
   return (
     <div
       style={{
@@ -173,7 +180,10 @@ export const Keyboard: React.FC<{
             data-coloring={colorings[letter]}
             style={{
               position: "absolute",
-              left: (j * (keyWidth + 4)) / 2 + 16 + (keyWidth + 4) * i,
+              left:
+                ((longestRow.length - row.length) * (keyWidth + 4)) / 2 +
+                16 +
+                (keyWidth + 4) * i,
               top: (keyHeight + 4) * j,
               display: "flex",
               alignItems: "center",
