@@ -419,6 +419,7 @@ export const wordsNorwegian5 = [
   "GODTA",
   "GOMME",
   "GRAVE",
+  "GREIT",
   "GRESK",
   "GRESS",
   "GREVE",
@@ -992,7 +993,6 @@ export const wordsNorwegian5 = [
   "SKRED",
   "SKRIK",
   "SKRIN",
-
   "SKRUE",
   "SKRYT",
   "SKUFF",

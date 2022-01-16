@@ -1301,6 +1301,7 @@ export const allWordNorwegian5 = [
   "GREIE",
   "GREIN",
   "GREIP",
+  "GREIT",
   "GRELL",
   "GREND",
   "GRENE",
