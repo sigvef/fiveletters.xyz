@@ -108,6 +108,8 @@ export default function App() {
     localStorage.getItem("fiveletters.xyz:cachedIsPremium") === "true"
   );
 
+  const [gameCount, setGameCount] = useState(1);
+
   let slug = window.location.pathname;
   if (
     !(
@@ -389,6 +391,7 @@ export default function App() {
     <Button
       onClick={() => {
         setGameState("play");
+        setGameCount((old) => old + 1);
         setIsFirstGame(false);
         gameId.current = generateGameId();
         setAttempts([]);
@@ -672,6 +675,8 @@ export default function App() {
               marginLeft: -16,
               marginRight: -16,
               marginBottom: 16,
+              display: "flex",
+              flexDirection: "column",
             }}
           >
             {attempts.map((attempt, i) => (
@@ -728,6 +733,7 @@ export default function App() {
                   letterBoxSize * answer.length +
                   letterGutter * (answer.length - 1),
                 margin: "0 auto",
+                flex: 1,
               }}
             >
               {(showGreenHelper === "show-now" ||
@@ -865,8 +871,6 @@ export default function App() {
                 ""
               )}
 
-              <div style={{ flex: 1 }} />
-
               {gameState === "win" && (
                 <div
                   style={{
@@ -877,6 +881,7 @@ export default function App() {
                     alignItems: "center",
                     justifyContent: "center",
                     flexDirection: "column",
+                    flex: 1,
                   }}
                 >
                   <div
@@ -909,6 +914,13 @@ export default function App() {
                   >
                     {translations.viewStats}
                   </a>
+
+                  <div style={{ flex: 1 }} />
+                  {gameCount > 1 && (
+                    <div style={{ marginTop: 32 }}>
+                      Game number {gameCount}.
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -919,6 +931,7 @@ export default function App() {
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
+                    flex: 1,
                   }}
                 >
                   <div
@@ -947,6 +960,13 @@ export default function App() {
                     </span>
                   </div>
                   {playAgainButton}
+
+                  <div style={{ flex: 1 }} />
+                  {gameCount > 1 && (
+                    <div style={{ marginTop: 32 }}>
+                      Game number {gameCount}.
+                    </div>
+                  )}
                 </div>
               )}
             </div>
