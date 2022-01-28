@@ -16,7 +16,7 @@ import { words3 } from "./words3";
 import { words4 } from "./words4";
 import { words5 } from "./words5";
 import { words6 } from "./words6";
-import { colors, containerMaxWidth } from "./colors";
+import { colors, containerMaxWidth, timeChallengeTarget } from "./colors";
 import { Button } from "./Button";
 import {
   capitalizeFirst,
@@ -33,6 +33,8 @@ import { storeAttempt } from "./db";
 import { Stats } from "./Stats";
 import { Modal } from "./Modal";
 import { MarkGithubIcon } from "@primer/octicons-react";
+import { SettingsModal } from "./SettingsModal";
+import { TimerDisplay } from "./TimerDisplay";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -59,7 +61,7 @@ const translationsMap = {
       "Fem bokstaver",
       "Seks bokstaver",
     ],
-    about: "Om",
+    about: "Instillinger",
     correctLetterRightPlace: "riktig bokstav, rett sted",
     correctLetterWrongPlace: "riktig bokstav, feil sted",
     guessTheWord: "Gjett ordet.",
@@ -83,7 +85,7 @@ const translationsMap = {
       "Five Letters",
       "Six Letters",
     ],
-    about: "About",
+    about: "Settings",
     correctLetterRightPlace: "correct letter, right place",
     correctLetterWrongPlace: "correct letter, wrong place",
     guessTheWord: "Guess the word.",
@@ -101,6 +103,10 @@ const translationsMap = {
 
 export default function App() {
   const [, _setForceRefresh] = useState({});
+  const [timeChallengeStartTimestamp, setTimeChallengeStartTimestamp] =
+    useState<Date | null>(null);
+  const [timeChallengeEndTimestamp, setTimeChallengeEndTimestamp] =
+    useState<Date | null>(null);
   const forceRefresh = () => {
     _setForceRefresh({});
   };
@@ -108,7 +114,7 @@ export default function App() {
     localStorage.getItem("fiveletters.xyz:cachedIsPremium") === "true"
   );
 
-  const [gameCount, setGameCount] = useState(1);
+  const [winCount, setWinCount] = useState(0);
 
   let slug = window.location.pathname;
   if (
@@ -197,6 +203,8 @@ export default function App() {
   );
   const [showStatsModal, setShowStatsModal] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
+  const [showTimeChallengeCompleteModal, setShowTimeChallengeCompleteModal] =
+    useState(false);
   const [isFirstGame, setIsFirstGame] = useState(true);
   const [defineHint, setDefineHint] = useState({
     shouldShowModal: false,
@@ -366,6 +374,14 @@ export default function App() {
         setAttempts((old) => [...old, attempt]);
         if (attempt === answer) {
           setGameState("win");
+          if (
+            winCount === timeChallengeTarget - 1 &&
+            timeChallengeStartTimestamp
+          ) {
+            setTimeChallengeEndTimestamp(new Date());
+            setShowTimeChallengeCompleteModal(true);
+          }
+          setWinCount((old) => old + 1);
         } else if (attempts.length + 1 === maxAttempts) {
           setGameState("lose");
         }
@@ -384,14 +400,26 @@ export default function App() {
         }
       }
     },
-    []
+    [winCount]
   );
+
+  const startTimeChallenge = () => {
+    setGameState("play");
+    setWinCount(0);
+    setIsFirstGame(false);
+    setHasNotMadeAnyAttemptYet(false);
+    gameId.current = generateGameId();
+    setAttempts([]);
+    setHints([]);
+    const newAnswer = words[(Math.random() * words.length) | 0];
+    setAnswer(newAnswer);
+    setTimeChallengeStartTimestamp(new Date());
+  };
 
   const playAgainButton = (
     <Button
       onClick={() => {
         setGameState("play");
-        setGameCount((old) => old + 1);
         setIsFirstGame(false);
         gameId.current = generateGameId();
         setAttempts([]);
@@ -457,113 +485,33 @@ export default function App() {
         overflow: "hidden",
       }}
     >
-      <Modal visible={showAboutModal} dismiss={() => setShowAboutModal(false)}>
-        {language === "no" && (
-          <>
-            <div style={{ marginBottom: 32, paddingRight: 8 }}>
-              <strong>Five Letters</strong> er en krysning mellom{" "}
-              <a
-                href="https://en.wikipedia.org/wiki/Mastermind_(board_game)"
-                style={{ color: colors.black }}
-              >
-                Mastermind
-              </a>{" "}
-              og andre klassiske ord-leker.
-            </div>
-            <div style={{ marginBottom: 32, paddingRight: 8 }}>
-              Målet med spillet er å gjette hva det skjulte ordet er. For hvert
-              gjett får du vite hvor mange bokstaver som er gjettet riktig.
-            </div>
+      {timeChallengeEndTimestamp && (
+        <Modal
+          visible={showTimeChallengeCompleteModal}
+          dismiss={() =>
+            //@ts-expect-error
+            (window.location = slug)
+          }
+        >
+          <div style={{ fontWeight: "bold" }}>
+            <div style={{ marginBottom: 32 }}>Time challenge complete!</div>
 
-            <div style={{ paddingRight: 8 }}>
-              Hvis du liker dette spillet, bør du også sjekke ut{" "}
-              <a
-                href="https://en.wikipedia.org/wiki/Lingo_(American_game_show)"
-                style={{ color: colors.black }}
-              >
-                Lingo (TV-program)
-              </a>{" "}
-              og{" "}
-              <a
-                href="https://www.powerlanguage.co.uk/wordle/"
-                style={{ color: colors.black }}
-              >
-                Wordle
-              </a>
-              .
+            <div style={{ fontSize: 32, textAlign: "center" }}>
+              <TimerDisplay
+                startValue={timeChallengeStartTimestamp}
+                endValue={timeChallengeEndTimestamp}
+              />
             </div>
-
-            <div style={{ marginTop: 32 }}>
-              <a
-                href="https://github.com/sigvef/fiveletters.xyz"
-                style={{
-                  color: colors.black,
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <MarkGithubIcon size={24} />
-                <div style={{ marginLeft: 8 }}>
-                  Følg videre utvikling på GitHub.
-                </div>
-              </a>
-            </div>
-          </>
-        )}
-        {language === "en" && (
-          <>
-            <div style={{ marginBottom: 32, paddingRight: 8 }}>
-              <strong>Five Letters</strong> is a cross between{" "}
-              <a
-                href="https://en.wikipedia.org/wiki/Mastermind_(board_game)"
-                style={{ color: colors.black }}
-              >
-                Mastermind
-              </a>{" "}
-              and classic word guessing games.
-            </div>
-            <div style={{ marginBottom: 32, paddingRight: 8 }}>
-              The objective of the game is to guess the hidden five letter word.
-              For each guess, you will be told how many of the letters that you
-              guessed are correct.
-            </div>
-
-            <div style={{ paddingRight: 8 }}>
-              If you like this game, you should also check out{" "}
-              <a
-                href="https://en.wikipedia.org/wiki/Lingo_(American_game_show)"
-                style={{ color: colors.black }}
-              >
-                Lingo (game show)
-              </a>{" "}
-              and{" "}
-              <a
-                href="https://www.powerlanguage.co.uk/wordle/"
-                style={{ color: colors.black }}
-              >
-                Wordle
-              </a>
-              .
-            </div>
-
-            <div style={{ marginTop: 32 }}>
-              <a
-                href="https://github.com/sigvef/fiveletters.xyz"
-                style={{
-                  color: colors.black,
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <MarkGithubIcon size={24} />
-                <div style={{ marginLeft: 8 }}>
-                  Follow development on GitHub.
-                </div>
-              </a>
-            </div>
-          </>
-        )}
-      </Modal>
+          </div>
+        </Modal>
+      )}
+      <SettingsModal
+        visible={showAboutModal}
+        onRequestDismiss={() => setShowAboutModal(false)}
+        language={language}
+        variant={slug}
+        startTimeChallenge={startTimeChallenge}
+      />
       <div
         style={{
           flex: 1,
@@ -917,11 +865,6 @@ export default function App() {
                   </a>
 
                   <div style={{ flex: 1 }} />
-                  {gameCount > 1 && (
-                    <div style={{ marginTop: 32 }}>
-                      Game number {gameCount}.
-                    </div>
-                  )}
                 </div>
               )}
 
@@ -963,11 +906,6 @@ export default function App() {
                   {playAgainButton}
 
                   <div style={{ flex: 1 }} />
-                  {gameCount > 1 && (
-                    <div style={{ marginTop: 32 }}>
-                      Game number {gameCount}.
-                    </div>
-                  )}
                 </div>
               )}
             </div>
@@ -982,7 +920,13 @@ export default function App() {
                 flexDirection: "column",
               }}
             >
-              <div style={{ display: "flex", alignItems: "flex-end" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
                 <div
                   className="animate-all-fast"
                   style={{
@@ -998,7 +942,7 @@ export default function App() {
                         ? 1
                         : 0,
                     transform:
-                      attempts.length > 0
+                      !isFirstGame || attempts.length > 1 || attempts.length > 0
                         ? "translateY(0px)"
                         : "translateY(8px)",
                     pointerEvents:
@@ -1007,38 +951,58 @@ export default function App() {
                         : "none",
                   }}
                 >
-                  {isHintEnabledForLanguage && (
-                    <a
-                      href="#"
-                      style={{ color: colors.black }}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        fetch(
-                          "https://api.dictionaryapi.dev/api/v2/entries/en/" +
-                            answer
-                        )
-                          .then((response) => response.json())
-                          .then((data) =>
-                            setDefineHint({
-                              shouldShowModal: true,
-                              value:
-                                data[0]?.meanings[0]?.definitions[0]
-                                  ?.definition || "unknown.",
-                            })
-                          );
-                      }}
-                    >
-                      Hint
-                    </a>
-                  )}
+                  <div style={{ width: 128 }}>
+                    {isHintEnabledForLanguage && (
+                      <a
+                        href="#"
+                        style={{ color: colors.black }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          fetch(
+                            "https://api.dictionaryapi.dev/api/v2/entries/en/" +
+                              answer
+                          )
+                            .then((response) => response.json())
+                            .then((data) =>
+                              setDefineHint({
+                                shouldShowModal: true,
+                                value:
+                                  data[0]?.meanings[0]?.definitions[0]
+                                    ?.definition || "unknown.",
+                              })
+                            );
+                        }}
+                      >
+                        Hint
+                      </a>
+                    )}
+                  </div>
                 </div>
-                <div style={{ flex: 1 }} />
+                {timeChallengeStartTimestamp && (
+                  <div
+                    style={{
+                      marginBottom: 16,
+                      marginLeft: 16,
+                      textAlign: "center",
+                    }}
+                  >
+                    <TimerDisplay
+                      startValue={timeChallengeStartTimestamp}
+                      endValue={timeChallengeEndTimestamp}
+                    />
+                    <div>
+                      {winCount} / {timeChallengeTarget}
+                    </div>
+                  </div>
+                )}
                 {isPremium && (
                   <div
                     style={{
                       marginBottom: 16,
                       marginRight: 16,
                       color: colors.light,
+                      width: 128,
+                      textAlign: "right",
                       opacity: 0.5,
                       alignSelf: "flex-end",
                       display: "flex",

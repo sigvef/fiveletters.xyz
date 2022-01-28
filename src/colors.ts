@@ -1,5 +1,6 @@
 export const borderRadius = 8;
 export const containerMaxWidth = 560;
+export const timeChallengeTarget = 10;
 
 export const colors = {
   extraBlack: "#031514",
