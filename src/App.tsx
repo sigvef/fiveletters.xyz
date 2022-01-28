@@ -596,6 +596,7 @@ export default function App() {
               position: "absolute",
               top: 16,
               left: 16,
+              textDecoration: "underline",
               opacity: hasNotMadeAnyAttemptYet ? 1 : 0,
               pointerEvents:
                 isFirstGame && hasNotMadeAnyAttemptYet ? "all" : "none",
