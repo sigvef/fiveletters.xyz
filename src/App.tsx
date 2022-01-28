@@ -149,10 +149,11 @@ export default function App() {
     no: ["QWERTYUIOPÅ", "ASDFGHJKLØÆ", "ZXCVBNMb"],
     en: ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNMb"],
   }[language];
-  const isHintEnabledForLanguage = {
-    no: false,
-    en: true,
-  }[language];
+  const isHintEnabled =
+    {
+      no: false,
+      en: true,
+    }[language] && setTimeChallengeStartTimestamp === null;
   const isDefinesEnabledForLanguage = {
     no: false,
     en: true,
@@ -952,7 +953,12 @@ export default function App() {
                   }}
                 >
                   <div style={{ width: 128 }}>
-                    {isHintEnabledForLanguage && (
+                    {timeChallengeStartTimestamp && (
+                      <div>
+                        {winCount} / {timeChallengeTarget}
+                      </div>
+                    )}
+                    {isHintEnabled && (
                       <a
                         href="#"
                         style={{ color: colors.black }}
@@ -990,9 +996,6 @@ export default function App() {
                       startValue={timeChallengeStartTimestamp}
                       endValue={timeChallengeEndTimestamp}
                     />
-                    <div>
-                      {winCount} / {timeChallengeTarget}
-                    </div>
                   </div>
                 )}
                 {isPremium && (
