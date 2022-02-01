@@ -153,7 +153,7 @@ export default function App() {
     {
       no: false,
       en: true,
-    }[language] && setTimeChallengeStartTimestamp === null;
+    }[language] && timeChallengeStartTimestamp === null;
   const isDefinesEnabledForLanguage = {
     no: false,
     en: true,
