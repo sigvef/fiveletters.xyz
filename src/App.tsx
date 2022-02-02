@@ -501,6 +501,7 @@ export default function App() {
               <TimerDisplay
                 startValue={timeChallengeStartTimestamp}
                 endValue={timeChallengeEndTimestamp}
+                showTenths={true}
               />
             </div>
           </div>
@@ -616,7 +617,6 @@ export default function App() {
           >
             <div>{translations.titles[count]}</div>
           </div>
-
           <div
             style={{
               flex: 1,
@@ -995,6 +995,7 @@ export default function App() {
                     <TimerDisplay
                       startValue={timeChallengeStartTimestamp}
                       endValue={timeChallengeEndTimestamp}
+                      showTenths={false}
                     />
                   </div>
                 )}
